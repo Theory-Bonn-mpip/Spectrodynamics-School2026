@@ -8,7 +8,7 @@
 
 ## Announcement
 
-We are delighted to announce that **SpectroDynamics 2026: Connecting Computational Spectroscopic Methods Across the Electromagnetic Spectrum** will take place at **CECAM, Lausanne**, from **31 August – 4 September 2026**.
+We are delighted to announce that **SpectroDynamics 2026: Connecting Computational Spectroscopic Methods Across the Electromagnetic Spectrum** will take place at **CECAM, Lausanne**, from **7 – 11 September 2026**.
 
 The school is supported by funding from **CECAM**, which allows us to host an intensive, in-person training event focused on computational spectroscopy across frequency regimes and methodological frameworks.
 
