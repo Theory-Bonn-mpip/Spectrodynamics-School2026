@@ -20,6 +20,8 @@ Further details about the program, lecturers, and timetable can be found on the 
 
 Participation in the school is **application-based**, and selection will be made to ensure a strong match between the program and the participants’ backgrounds and interests.
 
+Please submit your application exclusively through the [**CECAM website**](https://www.cecam.org/workshop-details/spectrodynamics-2026-connecting-computational-spectroscopic-methods-across-the-electromagnetic-spectrum-1489)., via the “Participate” tab associated with this school.
+
 A **strong application** should clearly demonstrate:
 
 - your current research interests and how they relate to quantum dynamics and/or computational spectroscopy;
@@ -37,7 +39,7 @@ Applicants are strongly encouraged to be **specific and concrete**, rather than 
 
 Thanks to CECAM and Psi-k support, a **limited number of fellowships** will be available to help cover participation costs for selected applicants.
 
-When applying, please **explicitly indicate** whether you are requesting financial support, and specify **which type of support you need**:
+When applying, please explicitly indicate in the “Your message” field whether you are requesting financial support, and specify **which type of support you need**:
 
 - accommodation,
 - travel, or
