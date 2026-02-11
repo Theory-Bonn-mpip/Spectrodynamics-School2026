@@ -35,7 +35,8 @@ Applicants are strongly encouraged to be **specific and concrete**, rather than 
 
 ## Fellowships and Financial Support
 
-Thanks to CECAM and Psi-k support, a **limited number of fellowships** will be available to help cover participation costs for selected applicants.
+Thanks to CECAM and Psi-k support, a **limited number of fellowships** will be available to help cover participation costs for selected applicants
+who may face financial or structural barriers to attending.
 
 When applying, please explicitly indicate in the “Your message” field whether you are requesting financial support, and specify **which type of support you need**:
 
