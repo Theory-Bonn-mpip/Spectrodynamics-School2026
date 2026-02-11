@@ -31,8 +31,6 @@ A **strong application** should clearly demonstrate:
 
 Applicants are strongly encouraged to be **specific and concrete**, rather than generic. Applications that clearly articulate how the school will contribute to the applicant’s scientific development will be ranked most highly.
 
-**Important** As a simple check that you have read these instructions, please start your application with the word “SpectroDynamics”.
-
 ---
 
 ## Fellowships and Financial Support
