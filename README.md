@@ -27,7 +27,7 @@ A **strong application** should clearly demonstrate:
 - your current research interests and how they relate to quantum dynamics and/or computational spectroscopy;
 - your motivation for attending the school, including which aspects of the program (lectures, tutorials, methods) are most relevant to your work;
 - your background and level of experience (e.g. quantum dynamics, molecular dynamics, electronic structure methods, spectroscopy);
-- ** how you plan to use the techniques learned at the school in your ongoing or future research projects.**
+- **how you plan to use the techniques learned at the school in your ongoing or future research projects.**
 
 Applicants are strongly encouraged to be **specific and concrete**, rather than generic. Applications that clearly articulate how the school will contribute to the applicant’s scientific development will be ranked most highly.
 
