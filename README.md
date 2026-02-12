@@ -22,6 +22,8 @@ Participation in the school is **application-based**, and selection will be made
 
 Please submit your application exclusively through the [**CECAM website**](https://www.cecam.org/workshop-details/spectrodynamics-2026-connecting-computational-spectroscopic-methods-across-the-electromagnetic-spectrum-1489)., via the “Participate” tab associated with this school.
 
+The school will also feature a poster session where all participants are encouraged to present their work as well as contributed talks. 
+
 A **strong application** should clearly demonstrate (in not more than 400 words):
 
 - your current research interests and how they relate to quantum dynamics and/or computational spectroscopy;
@@ -30,6 +32,9 @@ A **strong application** should clearly demonstrate (in not more than 400 words)
 - **how you plan to use the techniques learned at the school in your ongoing or future research projects.**
 
 Applicants are strongly encouraged to be **specific and concrete**, rather than generic. Applications that clearly articulate how the school will contribute to the applicant’s scientific development will be ranked most highly.
+
+
+
 
 ---
 
