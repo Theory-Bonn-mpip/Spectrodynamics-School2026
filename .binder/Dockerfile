@@ -69,6 +69,8 @@ RUN pip install --break-system-packages --no-cache \
     ipi \
     ffmpeg-python \
     ase \
+    mace-torch \
+    jupytext \
     postopus
 
 # CPU version
