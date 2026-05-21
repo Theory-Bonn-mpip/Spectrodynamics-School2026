@@ -1,4 +1,4 @@
-FROM fangohr/octopus:14.0
+FROM ubuntu:24.04
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
@@ -38,16 +38,13 @@ RUN apt-get update && apt-get install -y \
 
 # create user with a home directory
 ARG NB_USER=spectrodyn_user
-ARG NB_UID=1000
+ARG NB_UID=1001
 ENV USER ${NB_USER}
 ENV NB_UID ${NB_UID}
 ENV HOME /home/${NB_USER}
 ENV OMP_NUM_THREADS 10
 
-RUN adduser --disabled-password \
-    --gecos "Default user" \
-    --uid ${NB_UID} \
-    ${NB_USER}
+RUN useradd -m -s /bin/bash -u ${NB_UID} ${NB_USER} || true
 
 USER root
 RUN chown -R ${NB_UID} ${HOME}
@@ -83,11 +80,41 @@ RUN pip install --break-system-packages --no-cache nbstripout
 RUN find ${HOME} -type f -name "*.ipynb" \
     -exec nbstripout {} \;
 
-WORKDIR ${HOME}
+# ============================================================
+# CLONE + BUILD CODES
+# ============================================================
 
+USER root
+RUN mkdir -p ${HOME}/Codes
+RUN chown -R ${NB_UID}:${NB_UID} ${HOME}
+
+USER ${NB_USER}
+
+WORKDIR ${HOME}/Codes
+
+# ------------------------------------------------------------
+# DFTB+
+# ------------------------------------------------------------
 RUN git clone https://github.com/dftbplus/dftbplus.git
-RUN git clone https://github.com/charlyqchm/One-Mxll-to-Rule-Them-All.git
 
+WORKDIR ${HOME}/Codes/dftbplus
+
+RUN FC=gfortran CC=gcc cmake -DINSTANCE_SAFE_BUILD=True -B _build .
+WORKDIR ${HOME}/Codes/dftbplus/_build
+RUN cmake --build . -- -j 4
+RUN cmake --install .
+ENV DFTB_INSTALL=${HOME}/Codes/dftbplus/_build/_install
+
+# ------------------------------------------------------------
+# One-Mxll-to-Rule-Them-All
+# ------------------------------------------------------------
+WORKDIR ${HOME}/Codes
+RUN git clone https://github.com/charlyqchm/One-Mxll-to-Rule-Them-All.git
+WORKDIR ${HOME}/Codes/One-Mxll-to-Rule-Them-All
+RUN make
+
+
+WORKDIR ${HOME}
 COPY . ${HOME}
 #Here build DFTB+ and Omxrta
 ######
