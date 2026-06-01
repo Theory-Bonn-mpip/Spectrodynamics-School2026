@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     gfortran \
     cmake \
     pkg-config \
+    pkgconf \
+    ninja-build \
     wget \
     curl \
     unzip \
@@ -30,10 +32,25 @@ RUN apt-get update && apt-get install -y \
     git \
     git-lfs \
     libopenblas-dev \
+    libblas-dev \
+    liblapack-dev \
     openmpi-bin \
     libopenmpi-dev \
     libscalapack-mpi-dev \
+    libboost-dev \
+    libcgal-dev \
+    libelpa-dev \
+    libetsf-io-dev \
+    libfftw3-dev \
+    libgmp-dev \
+    libgsl-dev \
+    libmetis-dev \
+    libmpfr-dev \
+    libnetcdff-dev \
+    libnlopt-dev \
+    libyaml-dev \
     && rm -rf /var/lib/apt/lists/*
+
 
 
 # create user with a home directory
@@ -68,7 +85,8 @@ RUN pip install --break-system-packages --no-cache \
     ase \
     mace-torch \
     jupytext \
-    postopus
+    postopus \
+    nbstripout
 
 # CPU version
 RUN pip install --break-system-packages --no-cache \
@@ -112,6 +130,19 @@ WORKDIR ${HOME}/Codes
 RUN git clone https://github.com/charlyqchm/One-Mxll-to-Rule-Them-All.git
 WORKDIR ${HOME}/Codes/One-Mxll-to-Rule-Them-All
 RUN make
+
+# ------------------------------------------------------------
+# OCTOPUS
+# ------------------------------------------------------------
+WORKDIR ${HOME}/Codes
+
+RUN git clone https://gitlab.com/octopus-code/octopus.git
+
+WORKDIR ${HOME}/Codes/octopus
+
+RUN cmake -G Ninja -B _build --fresh --install-prefix=${HOME}/Codes/octopus/_build/app -DOCTOPUS_OpenMP=On -DOCTOPUS_MPI=On -DOCTOPUS_APP_TESTS=Off -DOCTOPUS_ScaLAPACK=On -DOCTOPUS_NATIVE=Off .
+RUN cmake --build ./_build
+RUN cmake --install ./_build
 
 
 WORKDIR ${HOME}
