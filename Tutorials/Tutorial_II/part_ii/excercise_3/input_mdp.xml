@@ -1,0 +1,24 @@
+<simulation verbosity='high'>
+  <output prefix='mdp'>
+    <trajectory filename='dipole' stride='1' extra_type='dipole'> extras </trajectory>
+    <trajectory filename='polarizability' stride='1' extra_type='polarizability'> extras </trajectory>
+  </output>
+  <total_steps> 100000 </total_steps>
+  <prng>
+    <seed> 31415 </seed>
+  </prng>
+  <ffsocket name='mace-mdp' mode='unix' matching='any'>
+    <address> mdp-ex3 </address> <latency> 2e-4 </latency>
+  </ffsocket>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='ase'> ../excercise_2/init.xyz </file>
+    </initialize>
+    <forces>
+      <force forcefield='mace-mdp'> </force>
+    </forces>
+    <motion mode='replay'>
+      <file mode='ase'> ../excercise_2/nvt2.pos_0.extxyz </file>
+    </motion>
+  </system>
+</simulation>

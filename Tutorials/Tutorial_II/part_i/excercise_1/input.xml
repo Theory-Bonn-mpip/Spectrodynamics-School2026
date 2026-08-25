@@ -1,0 +1,34 @@
+<simulation verbosity='high' safe_stride='100'>
+  <output prefix='simulation'>
+    <properties stride='1' filename='out'>  [ step, time{picosecond}, conserved{electronvolt}, temperature{kelvin}, potential{electronvolt} ] </properties>
+    <trajectory filename='pos' stride='2' format="ase"> positions  </trajectory>
+    <checkpoint stride='500'/>
+  </output>
+  <total_steps> 300 </total_steps>
+  <prng>
+    <seed> 32342 </seed>
+  </prng>
+  <ffsocket name='mace' mode='unix' pbc='false'>
+      <address>h2o-mace_ex1</address> <latency> 1e-4 </latency>
+  </ffsocket>
+  <system>
+    <initialize nbeads='1'>
+      <file mode='ase' > init.xyz  </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces>
+      <force forcefield='mace'> </force>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'>300</temperature>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='nvt'>
+        <thermostat mode='pile_l'>
+          <tau units="femtosecond"> 200.0 </tau>     
+        </thermostat>
+        <timestep units='femtosecond'> 0.5 </timestep>
+      </dynamics>
+    </motion>
+  </system>
+</simulation>
