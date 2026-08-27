@@ -52,7 +52,6 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 
-
 # create user with a home directory
 ARG NB_USER=spectrodyn_user
 ARG NB_UID=1001
@@ -79,19 +78,25 @@ RUN pip install --break-system-packages --no-cache \
     holoviews \
     sympy \
     tqdm \
-    chemiscope \
-    ipi \
-    ffmpeg-python \
     ase \
-    mace-torch \
+    'chemiscope>=1.0' \
+    'ipi>=3.2.0' \
+    matplotlib \
+    ffmpeg-python \
     jupytext \
     postopus \
     nbstripout
 
-# CPU version
-RUN pip install --break-system-packages --no-cache \
-    torch \
-    mace-torch
+# ============================================================
+# MACE
+
+# MACE with MDP atomic-decomposition outputs
+# ============================================================
+RUN pip install \
+    --break-system-packages \
+    --no-cache-dir \
+    "git+https://github.com/MPIP-STREAM/mace.git@MDP-derivatives-with-bec_training"
+
 
 RUN pip install --break-system-packages --no-cache nbstripout
 
@@ -124,13 +129,12 @@ RUN cmake --install .
 ENV DFTB_INSTALL=${HOME}/Codes/dftbplus/_build/_install
 
 # ------------------------------------------------------------
-# One-Mxll-to-Rule-Them-All
+# MARADO
 # ------------------------------------------------------------
 WORKDIR ${HOME}/Codes
-RUN git clone https://github.com/charlyqchm/One-Mxll-to-Rule-Them-All.git
-WORKDIR ${HOME}/Codes/One-Mxll-to-Rule-Them-All
+RUN git clone https://github.com/charlyqchm/MARADO.git
+WORKDIR ${HOME}/Codes/MARADO
 RUN make
-
 # ------------------------------------------------------------
 # OCTOPUS
 # ------------------------------------------------------------
