@@ -6,10 +6,16 @@
 # Not meant to be run directly. A downloader sources it and then calls
 #   fetch_folders  <local/remote folder> ...
 #   check_required <file> ...
-# with REPO_DIR pointing at the repository root.
+# with REPO_DIR pointing at the repository root (an absolute path, so the
+# downloaders work from any working directory).
 #
 # Files already present with the correct size are skipped and interrupted
 # transfers are resumed, so the downloaders are safe to re-run.
+
+if [[ -z "${REPO_DIR:-}" || "${REPO_DIR}" != /* ]]; then
+    echo "keeper_download.sh: REPO_DIR must be set to an absolute path before sourcing." >&2
+    return 1 2>/dev/null || exit 1
+fi
 
 KEEPER="https://keeper.mpdl.mpg.de"
 TOKEN="f6e5df518a0942a7bc4d"
@@ -81,6 +87,6 @@ check_required() {
     if [[ $failed -eq 0 && $missing -eq 0 ]]; then
         return 0
     fi
-    echo "Download incomplete — re-run ./${script} (or report the missing files)."
+    echo "Download incomplete — re-run ${REPO_DIR}/${script} (or report the missing files)."
     return 1
 }
