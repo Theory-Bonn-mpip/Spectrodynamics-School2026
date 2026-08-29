@@ -45,6 +45,10 @@ results_otter/
 # ---- papers (copyrighted PDFs / extracted figures) ----
 papers/
 
+# ---- authoring-only derivation notes (also keeps deploy_tutorial.sh from
+#      shipping them: the deploy list includes untracked files) ----
+latex_report_sfg/
+
 # ---- python / jupyter ----
 __pycache__/
 .ipynb_checkpoints/

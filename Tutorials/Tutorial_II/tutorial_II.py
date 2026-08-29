@@ -4,6 +4,7 @@ Vibrational spectroscopy of water from machine-learned molecular dynamics
 *************************************************************************
 
 :Authors: Yair Litman `@litman90 <https://github.com/litman90/>`_
+:Version: 1.0
 
 This tutorial was prepared for the *Spectrodynamics 2026* summer school. It
 shows how to compute vibrational spectra (IR, Raman, and sum-frequency

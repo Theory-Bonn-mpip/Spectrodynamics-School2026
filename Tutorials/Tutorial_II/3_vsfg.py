@@ -4,6 +4,7 @@ Part III: Vibrational sum-frequency generation spectroscopy of the water/air int
 **************************************************************************************
 
 :Authors: Yair Litman `@litman90 <https://github.com/litman90/>`_
+:Version: 1.0
 
 **This notebook is the optional third part of the tutorial** *Vibrational
 spectroscopy of water from machine-learned molecular dynamics*
@@ -34,8 +35,11 @@ This part contains two exercises:
 Unlike Parts I and II, this part runs **no simulations**: everything that
 needs one (the slab trajectory itself and the machine-learned atomic
 quantities of Exercise 6) was computed beforehand and is part of the
-download. The notebook only runs analyses -- about 20 minutes of computing
-in total, and each step states its expected time.
+download. The i-PI inputs used to produce these data are provided as well
+-- with the downloaded trajectory and in ``part_iii/excercise_6`` -- in
+case you want to reproduce them yourself. The notebook only runs analyses
+-- about 20 minutes of computing in total, and each step states its
+expected time.
 
 As in Parts I and II, the derivations are collected in the Appendix at the
 end, and the answers to the questions in the section after it.
@@ -64,8 +68,8 @@ import numpy as np
 # slab simulation (a pre-computed 50 ps trajectory of a small slab is
 # provided in ``part_iii/trajectory_files``), using:
 #
-# - Exercise 5: the surface-specific velocity-velocity correlation function
-#   (ssVVCF) approach, which needs nothing but the trajectory;
+# - Exercise 5: an approach based on the velocities of the OH bonds, which
+#   needs nothing but the trajectory;
 # - Exercise 6: a fully atomistic route based on the machine-learned atomic
 #   charges, dipoles and polarizabilities of the MACE-MDP model.
 #
@@ -74,8 +78,8 @@ import numpy as np
 # list of options.
 #
 # Three analyses are run along the way: the density and orientation
-# profiles of the slab (about 2 minutes), the ssVVCF spectrum (about
-# 8 minutes) and the atomic-decomposition spectrum (about 10 minutes) --
+# profiles of the slab (about 2 minutes), the velocity-based spectrum
+# (about 8 minutes) and the atomic-decomposition spectrum (about 10 minutes) --
 # roughly 20 minutes of computing in total, each launched where the text
 # introduces it.
 
@@ -97,13 +101,13 @@ import numpy as np
 #    \chi^{(2),R}_{\zeta\eta\kappa}(\omega_{\mathrm{IR}}) =
 #    \frac{i}{k_B T\, \omega_{\mathrm{IR}}}
 #    \int_0^{\infty} \mathrm{d}t\, e^{i\omega_{\mathrm{IR}} t}\,
-#    \bigl\langle \dot{\bar{\bar{\alpha}}}_{\zeta\eta}(t)\,
-#    \dot{\bar{\mu}}_{\kappa}(0) \bigr\rangle
+#    \bigl\langle \dot{{\alpha}}_{\zeta\eta}(t)\,
+#    \dot{\mu}_{\kappa}(0) \bigr\rangle
 #    \tag{1}
 #
 # where :math:`\zeta\eta\kappa` are the polarizations of the SFG, visible and
 # IR beams, :math:`\omega_{\mathrm{IR}}` is the IR frequency,
-# :math:`\bar{\bar{\alpha}}` and :math:`\bar{\mu}` are the *total*
+# :math:`\alpha` and :math:`\mu` are the *total*
 # polarizability tensor and dipole moment of the system as in Part II, the
 # dot denotes the time derivative, and :math:`\langle \cdots \rangle` a
 # canonical ensemble average. The :math:`i` in the prefactor means that the
@@ -272,13 +276,13 @@ plt.show()
 #
 # .. math::
 #
-#    \dot{\bar{\mu}} \simeq \sum_{i=1}^{N_{\mathrm{mol}}}
+#    \dot{\mu} \simeq \sum_{i=1}^{N_{\mathrm{mol}}}
 #    \sum_{\mathrm{bond}}
-#    \frac{\partial \bar{\mu}^{\,\mathrm{bond}}}{\partial r}\,
+#    \frac{\partial \mu^{\,\mathrm{bond}}}{\partial r}\,
 #    \dot{r}_{i,\mathrm{bond}}, \qquad
-#    \dot{\bar{\bar{\alpha}}} \simeq \sum_{i=1}^{N_{\mathrm{mol}}}
+#    \dot{\alpha} \simeq \sum_{i=1}^{N_{\mathrm{mol}}}
 #    \sum_{\mathrm{bond}}
-#    \frac{\partial \bar{\bar{\alpha}}^{\,\mathrm{bond}}}{\partial r}\,
+#    \frac{\partial \alpha^{\,\mathrm{bond}}}{\partial r}\,
 #    \dot{r}_{i,\mathrm{bond}}
 #    \tag{2}
 #
@@ -298,11 +302,28 @@ plt.show()
 # :math:`\partial \alpha_{zz} / \partial r = 1.56` Å :math:`^{2}`.
 #
 # Inserting Eq. (2) into Eq. (1) turns the dipole-polarizability
-# correlation into a double sum over pairs of OH bonds, with three kinds
-# of terms: *self* terms (a bond with itself), *intramolecular* terms (the
-# other OH of the same molecule) and *intermolecular* terms (bonds of
-# different molecules). The ``-rc`` cutoff of the analysis script selects
-# how many of the cross terms are kept (5d).
+# correlation into a double sum over pairs of OH bonds, which splits into
+# three kinds of terms (Eq. (3) of Khatib and Sulpizi; the polarization
+# indices are suppressed on the right-hand side):
+#
+# .. math::
+#
+#    \bigl\langle \dot{\alpha}_{\zeta\eta}(t)\, \dot{\mu}_{\kappa}(0)
+#    \bigr\rangle
+#    = \sum_{i}^{N_{\mathrm{mol}}} \sum_{b}
+#      \bigl\langle \dot{\alpha}_{i,b}(t)\, \dot{\mu}_{i,b}(0) \bigr\rangle
+#    + \sum_{i}^{N_{\mathrm{mol}}} \sum_{b}
+#      \bigl\langle \dot{\alpha}_{i,b}(t)\, \dot{\mu}_{i,-b}(0) \bigr\rangle
+#    + \sum_{i \neq j}^{N_{\mathrm{mol}}} \sum_{b,b'}
+#      \bigl\langle \dot{\alpha}_{i,b}(t)\, \dot{\mu}_{j,b'}(0) \bigr\rangle
+#    \tag{3}
+#
+# where :math:`b` runs over the two OH bonds of a molecule and :math:`-b`
+# denotes the other bond of the same molecule. The first sum collects the
+# *self* terms (a bond with itself), the second the *intramolecular* terms
+# (the two bonds of the same molecule) and the third the *intermolecular*
+# terms (bonds of different molecules). The ``-rc`` cutoff of the analysis
+# script selects how many of the cross terms are kept (5d).
 #
 # The surface window
 # ~~~~~~~~~~~~~~~~~~
@@ -435,8 +456,7 @@ plt.show()
 #   quarter of the free-OH peak. **No such calculation is finished
 #   without convergence tests** -- with respect to the trajectory length
 #   and the analysis parameters (we come back to this at the end of
-#   Exercise 6) but also with respect to the model itself: the constant
-#   derivatives, next.
+#   Exercise 6).
 #
 # Non-Condon effects
 # ~~~~~~~~~~~~~~~~~~
@@ -446,7 +466,8 @@ plt.show()
 # each OH group: the transition dipole of an OH oscillator absorbing at
 # 3200 cm :math:`^{-1}` (strongly hydrogen-bonded) is several times larger
 # than that of a free OH at 3700 cm :math:`^{-1}` (compare the SPC/E and
-# MACE-MDP spectra of Exercise 3). Ohto et al. include this dependence
+# MACE-MDP spectra of Exercise 3). Ohto et al. (*J. Chem. Phys.* **143**,
+# 124702 (2015)) include this dependence
 # through the spectroscopic maps of Skinner and co-workers (Auer et al.,
 # *Proc. Natl. Acad. Sci. USA* **104**, 14215 (2007); Auer and Skinner,
 # *J. Chem. Phys.* **128**, 224511 (2008)), which relate the transition
@@ -458,10 +479,29 @@ plt.show()
 #    \mu'(\omega)\, \alpha'(\omega) = \left( 1.377 +
 #    \frac{53.03\,(3737 - \omega)}{6932.2} \right)
 #    \left( 1.271 + \frac{6.287\,(3737 - \omega)}{6932.2} \right)
-#    \tag{3}
+#    \tag{4}
 #
 # with :math:`\omega` in cm :math:`^{-1}` and 3737 cm :math:`^{-1}` the
-# gas-phase OH frequency. ``ssvvcf_ml.py -non_condon`` already wrote the
+# gas-phase OH frequency. Before applying it, let's look at the factor
+# itself in the stretching region:
+
+nu_nc = np.linspace(2800, 4000, 200)
+x_nc = (3737.0 - nu_nc) / 6932.2
+factor_nc = (1.377 + 53.03 * x_nc) * (1.271 + 6.287 * x_nc)
+fig, ax = plt.subplots(1, 1, figsize=(6, 2.6), constrained_layout=True)
+ax.plot(nu_nc, factor_nc, "C1-", lw=1.5)
+ax.axhline(1, color="gray", lw=0.5, ls="--")
+ax.set_xlim(2800, 4000)
+ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
+ax.set_ylabel(r"$\mu'(\omega)\, \alpha'(\omega)$")
+plt.show()
+
+# %%
+# The factor is positive across the whole band and grows steeply towards
+# the red: about 1.4 at the free-OH peak, 6 at 3400 cm :math:`^{-1}` and
+# almost 10 at 3200 cm :math:`^{-1}` -- it rescales the spectrum without
+# flipping any sign, and boosts exactly the strongly hydrogen-bonded,
+# red-shifted oscillators. ``ssvvcf_ml.py -non_condon`` already wrote the
 # corrected spectrum as the third column of ``ssVVCF_ImChi2.dat``, so
 # taking the Condon approximation out is one plot away:
 
@@ -493,18 +533,13 @@ plt.show()
 # 2. What would you expect to see with ``-nmode 4`` (window equal to +1
 #    everywhere), and with ``-nmode 2`` (top surface only)? Try it if you
 #    have time.
-# 3. The ssVVCF spectrum was computed without any dipole or polarizability
-#    model, from the positions alone. Where did the information on the
-#    intensities go, and what is lost compared with the IR/Raman route of
-#    Part II?
 
 # %%
 # Exercise 6: VSFG spectra from machine-learned atomic dipoles and polarizabilities
 # =================================================================================
 #
-# The bond model of Exercise 5 is cheap and insightful, but it is a
-# *model*: fixed derivatives, a hand-picked coupling cutoff, an empirical
-# non-Condon factor. Exercise 3 taught us that the machine-learned dipoles
+# The bond model of Exercise 5 is rather cheap and insightful, with many approximations.
+# Exercise 3 taught us that the machine-learned dipoles
 # of MACE-MDP get the intensities of liquid water right without any of
 # this -- can we use them here? Not directly: the *total* dipole and
 # polarizability of a slab, which is all we used in Part II, do not
@@ -519,14 +554,14 @@ plt.show()
 #
 # .. math::
 #
-#    \bar{\mu} = \sum_i \bigl( \boldsymbol{\nu}_i + q_i \mathbf{r}_i \bigr),
+#    \mu = \sum_i \bigl( \boldsymbol{\nu}_i + q_i \mathbf{r}_i \bigr),
 #    \qquad
-#    \bar{\bar{\alpha}} = \sum_i \boldsymbol{\alpha}_i
-#    \tag{4}
+#    \alpha = \sum_i \boldsymbol{\alpha}_i
+#    \tag{5}
 #
 # This atomic decomposition is exactly what is needed to make Eq. (1)
 # surface specific -- the idea of Litman et al. (*J. Phys. Chem. Lett.*
-# **14**, 8175 (2023)), who used it to compute the SFG spectrum of the
+# **14**, 8175 (2023)), who used it to compute the converged SFG spectrum of the
 # water/air interface fully from first principles. The atomic pieces are
 # grouped into molecules (referencing the charge term to the oxygen of the
 # molecule, so that each molecular dipole is origin independent, as in
@@ -537,13 +572,13 @@ plt.show()
 #
 #    \mathrm{Im}\,\chi^{(2)}_{xxz}(\omega) \propto \frac{1}{\omega}
 #    \int_0^{\infty} \mathrm{d}t\, \cos(\omega t)\,
-#    \Bigl\langle \dot{\tilde{\bar{\bar{\alpha}}}}_{xx}(t)\,
-#    \dot{\tilde{\bar{\mu}}}_{z}(0) \Bigr\rangle,
+#    \Bigl\langle \dot{\tilde{\alpha}}_{xx}(t)\,
+#    \dot{\tilde{\mu}}_{z}(0) \Bigr\rangle,
 #    \qquad
-#    \tilde{\bar{\mu}} = \sum_m w(z_m)\, \tilde{\boldsymbol{\mu}}_m,
+#    \tilde{\mu} = \sum_m w(z_m)\, \tilde{\boldsymbol{\mu}}_m,
 #    \quad
-#    \tilde{\bar{\bar{\alpha}}} = \sum_m \tilde{\boldsymbol{\alpha}}_m
-#    \tag{5}
+#    \tilde{\alpha} = \sum_m \tilde{\boldsymbol{\alpha}}_m
+#    \tag{6}
 #
 # with :math:`\tilde{\boldsymbol{\mu}}_m = \sum_{i \in m} [\boldsymbol{\nu}_i
 # + q_i (\mathbf{r}_i - \mathbf{r}_{\mathrm{O},m})]` and
@@ -571,7 +606,7 @@ print(re.search(r"<output.*?</output>", xml_ex6, re.DOTALL).group(0))
 # %%
 # and the client differs from that of Exercise 3b in one argument:
 # ``has_atomic=True`` tells the socket client to also pack the atomic
-# charges, dipoles and polarizabilities of Eq. (4) -- which the MACE
+# charges, dipoles and polarizabilities of Eq. (5) -- which the MACE
 # calculator of the STREAM branch (see ``environment.yml``) returns
 # alongside the totals -- into the extras:
 
@@ -621,13 +656,23 @@ with open(f"{traj_dir}/h2o.atomic_charges_0") as f:
 # - ``-prefix``: the prefix of the output files, here ``mdp_``.
 #
 # The command is stored in ``get_sfg_atomic.sh`` and takes about ten
-# minutes -- the longest analysis of this notebook:
+# minutes -- the longest analysis of this notebook. If it is taking much
+# longer on your machine, you can abort it (interrupt the kernel) and
+# analyse a shorter stretch of the trajectory instead: open
+# ``part_iii/excercise_6/get_sfg_atomic.sh``, reduce ``-max 25000`` to,
+# say, ``-max 10000`` (the first 20 ps -- the run time shrinks
+# proportionally), and re-run this cell. The plotting cells below then
+# work unchanged, just with noisier curves:
 
 subprocess.run(["bash", "get_sfg_atomic.sh"], cwd=workdir_ex6, check=True)
 
 # %%
 # Our 50 ps result against the converged reference of the same slab and
-# the same analysis parameters, averaged over 1 ns of dynamics:
+# the same analysis parameters, averaged over 1 ns of dynamics. We show
+# only the stretching region: at lower frequencies the SFG response of the
+# bending band carries quadrupolar contributions that we do not discuss
+# here, and the librational region is not meaningfully described at this
+# level:
 
 sfg_at = np.loadtxt(f"{workdir_ex6}/mdp_SFG_ImChi2_xxz.dat")
 sfg_at_1ns = np.loadtxt(f"{workdir_ex6}/reference_results/slab-048_1ns_SFG_ImChi2_xxz_rc4.0.dat")
@@ -636,8 +681,10 @@ fig, ax = plt.subplots(1, 1, figsize=(6, 3.4), constrained_layout=True)
 ax.plot(sfg_at[:, 0], sfg_at[:, 1], "r-", lw=1, label="50 ps (ours)")
 ax.plot(sfg_at_1ns[:, 0], sfg_at_1ns[:, 1], "k-", lw=1.5, label="1 ns, reference")
 ax.axhline(0, color="gray", lw=0.5)
-ax.set_xlim(0, 4000)
-top = 1.5 * np.abs(sfg_at_1ns[sfg_at_1ns[:, 0] > 200, 1]).max()   # the 1/omega factor diverges at low frequency
+ax.set_xlim(2700, 4000)
+stretch = (sfg_at[:, 0] > 2700) & (sfg_at[:, 0] < 4000)
+top = 1.15 * max(np.abs(sfg_at[stretch, 1]).max(),
+                 np.abs(sfg_at_1ns[stretch, 1]).max())
 ax.set_ylim(-top, top)
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
 ax.set_ylabel(r"Im $\chi^{(2)}_{xxz}$ (arb. units)")
@@ -645,22 +692,21 @@ ax.legend(fontsize=8)
 plt.show()
 
 # %%
-# - The stretching region shows the same positive free-OH peak (3770
-#   cm :math:`^{-1}`) and negative hydrogen-bonded band as the ssVVCF
-#   spectrum, the latter now much stronger and centred lower, near 3450
-#   cm :math:`^{-1}`. Unlike the bond model, this route also produces the
-#   librational band (negative, around 600 cm :math:`^{-1}`) and a weak
-#   bending feature near 1650 cm :math:`^{-1}` -- with the caveat that below
-#   about 200 cm :math:`^{-1}` the :math:`1/\omega` factor amplifies the
-#   statistical noise, as in the Raman spectra of Exercise 4.
-# - 50 ps reproduce every feature and every sign, but not yet the
-#   *intensities*: our hydrogen-bonded band is about 60 % too deep and our
-#   free-OH peak somewhat too small, so their ratio (3.8 against 1.9) is
-#   off by a factor of two. The SFG signal comes from the few molecules in
-#   the interfacial layers only (a small fraction of an already small
-#   system), and each of them contributes a *difference* -- in the
-#   bulk-like centre the contributions of oppositely oriented molecules
-#   cancel. Band *shapes* converge long before band *ratios*.
+# - The spectrum shows the same positive free-OH peak (3770
+#   cm :math:`^{-1}`) and negative hydrogen-bonded band as the
+#   velocity-based spectra of Exercise 5, the latter now much stronger and
+#   centred lower, near 3450 cm :math:`^{-1}`.
+# - The free-OH peak of the atomic route also develops a shoulder around
+#   3680-3700 cm :math:`^{-1}`, related to the intramolecular coupling
+#   between the two OH oscillators of a molecule -- a feature the bond
+#   model of Exercise 5 cannot capture.
+# - Our 50 ps curve reproduces every feature and every sign, but it is
+#   much noisier than its Exercise 5 counterpart: the SFG signal comes
+#   from the few molecules in the interfacial layers only, a small
+#   fraction of an already small system. The velocity-based approach
+#   converges much faster -- particularly when only the self terms of the
+#   correlation function are kept, as in 5d, where the average runs over
+#   96 equivalent OH oscillators.
 #
 # **A word on convergence.** A publishable SFG calculation must be
 # converged in three separate directions: the *slab thickness* (thick
@@ -678,18 +724,19 @@ plt.show()
 # 6c) Bond model versus machine-learned atomic decomposition
 # ----------------------------------------------------------
 #
-# Finally, the two routes side by side, with the same surface window and
-# the same 4 Å pair cutoff, in the stretching region and normalized to the
-# free-OH peak. We use the converged 1 ns references of both exercises, so
-# that the differences we discuss are the *models* and not the statistics
-# of 6b (the ssVVCF spectrum with ``-rc 4.0`` is the one you would get by
+# Finally, the two routes side by side in the stretching region,
+# normalized to the free-OH peak. We use the converged 1 ns references of
+# both exercises, so that the differences we discuss are the *models* and
+# not the statistics of 6b. For the bond model we show the non-Condon
+# spectrum at both cutoffs: ``-rc 1.0`` (self terms only, as in 5d) and
+# ``-rc 4.0`` (first solvation shell -- the spectrum you would get by
 # re-running ``get_ssvvcf.sh`` with that cutoff):
 
 sfg_ssvvcf_rc4 = np.loadtxt(f"{workdir_ex5}/reference_results/slab-048_1ns_ssVVCF_ImChi2_rc4.0.dat")
 
 fig, ax = plt.subplots(1, 1, figsize=(6, 3.4), constrained_layout=True)
-ax.plot(sfg_ssvvcf_rc4[:, 0], normalized_to_free_oh(sfg_ssvvcf_rc4[:, 0], sfg_ssvvcf_rc4[:, 1]), "C0-", lw=1, label="ssVVCF, Condon")
-ax.plot(sfg_ssvvcf_rc4[:, 0], normalized_to_free_oh(sfg_ssvvcf_rc4[:, 0], sfg_ssvvcf_rc4[:, 2]), "C1-", lw=1, label="ssVVCF, non-Condon")
+ax.plot(sfg_ssvvcf_ref[:, 0], normalized_to_free_oh(sfg_ssvvcf_ref[:, 0], sfg_ssvvcf_ref[:, 2]), "C0-", lw=1, label="ssVVCF, non-Condon, rc 1.0")
+ax.plot(sfg_ssvvcf_rc4[:, 0], normalized_to_free_oh(sfg_ssvvcf_rc4[:, 0], sfg_ssvvcf_rc4[:, 2]), "C1-", lw=1, label="ssVVCF, non-Condon, rc 4.0")
 ax.plot(sfg_at_1ns[:, 0], normalized_to_free_oh(sfg_at_1ns[:, 0], sfg_at_1ns[:, 1]), "k-", lw=1.5, label="MACE-MDP atomic")
 stretch_axes(ax)
 ax.set_ylabel(r"Im $\chi^{(2)}_{xxz}$ (normalized)")
@@ -697,23 +744,20 @@ ax.legend(fontsize=8)
 plt.show()
 
 # %%
-# - All three agree on the positions and signs of the two features -- free
-#   OH near 3770 cm :math:`^{-1}`, hydrogen-bonded band near 3420
-#   cm :math:`^{-1}` -- and, once normalized, even on the *width* of the
-#   band: they describe the same dynamics, and the sign is geometry.
-# - What the models disagree about is the *intensity* of the
-#   hydrogen-bonded band relative to the free-OH peak. The Condon bond
-#   model gives only 0.4 times the free-OH peak; the non-Condon factor of
-#   Eq. (3) raises it to 1.5, and the machine-learned atomic quantities to
-#   1.9. Most of the gap is therefore the environment dependence of the
-#   transition moments, which the empirical maps already capture; the rest
-#   is what the ML model contains on top of them (intermolecular
-#   polarization and charge transfer) -- the same lesson as in Exercise 3,
-#   now at the interface.
-# - The comparison is at matching cutoffs on purpose: the hydrogen-bonded
-#   band also carries the coupling between oscillators, so a self-only
-#   spectrum (``-rc 1.0``, as in 5d) and an ``-rcut 4.0`` one differ by
-#   more than the transition moments.
+# - All three agree on the signs of the two features -- positive free OH
+#   near 3770 cm :math:`^{-1}`, negative hydrogen-bonded band -- and,
+#   once normalized, roughly on the width of the band: they describe the
+#   same dynamics, and the sign is geometry.
+# - The intra- and intermolecular cross terms (``-rc 4.0``) deepen the
+#   hydrogen-bonded band of the bond model only slightly (1.5 against 1.5
+#   times the free-OH peak) but red-shift its minimum by about 80
+#   cm :math:`^{-1}`, from 3490 to 3410.
+# - The machine-learned atomic quantities deepen it much further, to 1.9
+#   times the free-OH peak, and add the 3680-3700 cm :math:`^{-1}`
+#   shoulder of 6b: this is what the ML model contains on top of the
+#   empirical maps (intermolecular polarization, charge transfer and the
+#   full environment dependence of the transition moments) -- the same
+#   lesson as in Exercise 3, now at the interface.
 #
 # Take-home messages of Part III
 # ------------------------------
@@ -732,10 +776,9 @@ plt.show()
 # - SFG spectra converge much more slowly than bulk spectra -- nanoseconds
 #   rather than tens of picoseconds: only the interfacial molecules
 #   contribute, and their signal is a difference of nearly cancelling
-#   orientations. The signal scales with the surface area; window
+#   orientations. Window
 #   parameters and coupling cutoffs must be tested as carefully as the
-#   trajectory length -- and interfaces with solutes are harder still,
-#   because the interfacial solute distributions must converge too.
+#   trajectory length.
 
 # %%
 # Appendix
@@ -752,42 +795,49 @@ plt.show()
 #
 # .. math::
 #
-#    \dot{\bar{\mu}}^{\,\mathrm{lab}}_{i,\mathrm{bond}} =
-#    \mathbf{D}_{m,i}\, \mathbf{D}_{b,i,\mathrm{bond}}
-#    \left( \frac{\partial \bar{\mu}^{\,\mathrm{bond}}}{\partial r}\,
+#    \dot{\mu}^{\,\mathrm{lab}}_{i,\mathrm{bond}} =
+#    \mathbf{D}^{\mathsf{T}}_{i,\mathrm{bond}}
+#    \left( \frac{\partial \mu^{\,\mathrm{bond}}}{\partial r}\,
 #    \dot{r}_{i,\mathrm{bond}} \right)
 #
 # .. math::
 #
-#    \dot{\bar{\bar{\alpha}}}^{\,\mathrm{lab}}_{i,\mathrm{bond}} =
-#    \mathbf{D}_{m,i}\, \mathbf{D}_{b,i,\mathrm{bond}}
-#    \left( \frac{\partial \bar{\bar{\alpha}}^{\,\mathrm{bond}}}{\partial r}\,
+#    \dot{\alpha}^{\,\mathrm{lab}}_{i,\mathrm{bond}} =
+#    \mathbf{D}^{\mathsf{T}}_{i,\mathrm{bond}}
+#    \left( \frac{\partial \alpha^{\,\mathrm{bond}}}{\partial r}\,
 #    \dot{r}_{i,\mathrm{bond}} \right)
-#    \mathbf{D}^{\mathsf{T}}_{b,i,\mathrm{bond}}\, \mathbf{D}^{\mathsf{T}}_{m,i}
+#    \mathbf{D}_{i,\mathrm{bond}}
 #
-# where :math:`\mathbf{D}_{b,i,\mathrm{bond}}` rotates from the bond frame
-# (:math:`z'` along the OH bond) to the molecular frame and
-# :math:`\mathbf{D}_{m,i}` from the molecular frame to the lab frame; the
-# polarizability, a rank-2 tensor, is rotated from both sides. Two
+# where :math:`\mathbf{D}_{i,\mathrm{bond}}` rotates from the lab frame to
+# the frame of the bond: its :math:`z'` axis points along the OH bond and
+# the transverse axes are fixed by the molecular plane, so the matrix is
+# built at every frame from the positions of the three atoms of the
+# molecule. (Khatib and Sulpizi write this same rotation as a product
+# :math:`\mathbf{D}_{m,i}\mathbf{D}_{b,i,\mathrm{bond}}` of a
+# molecule-to-lab and a bond-to-molecule matrix, with the molecular
+# :math:`z`-axis along the H--O--H bisector -- see Sec. 2 of their SI; the
+# single matrix used here is that product.) The polarizability, a rank-2
+# tensor, is rotated from both sides. Two
 # approximations lead from the exact time derivative to these expressions:
 #
 # - a first-order Taylor expansion of the bond dipole and polarizability
 #   in the OH bond length :math:`r` around its equilibrium value, which
 #   replaces the bond-frame quantities by the constant derivatives
-#   :math:`\partial \bar{\mu}^{\,\mathrm{bond}} / \partial r` and
-#   :math:`\partial \bar{\bar{\alpha}}^{\,\mathrm{bond}} / \partial r`
+#   :math:`\partial \mu^{\,\mathrm{bond}} / \partial r` and
+#   :math:`\partial \alpha^{\,\mathrm{bond}} / \partial r`
 #   times :math:`\dot{r}_{i,\mathrm{bond}}`;
 # - the product rule applied to
-#   :math:`\mathbf{D}_{m}\mathbf{D}_{b}\, \bar{\mu}^{\,\mathrm{bond}}` also
-#   produces terms with :math:`\dot{\mathbf{D}}_{m}` and
-#   :math:`\dot{\mathbf{D}}_{b}`. Because the OH stretch
+#   :math:`\mathbf{D}^{\mathsf{T}}_{i,\mathrm{bond}}\,
+#   \mu^{\,\mathrm{bond}}` also
+#   produces a term with :math:`\dot{\mathbf{D}}_{i,\mathrm{bond}}`.
+#   Because the OH stretch
 #   (:math:`\sim 3400` cm :math:`^{-1}`) is much faster than the molecular
 #   reorientation (libration, below :math:`\sim 1000` cm :math:`^{-1}`),
 #   these rotational terms contribute only far below the stretching band
 #   and are neglected.
 #
-# The scripts of Part III build :math:`\mathbf{D}_{m,i}
-# \mathbf{D}_{b,i,\mathrm{bond}}` from the positions of the three atoms of
+# The scripts of Part III build :math:`\mathbf{D}_{i,\mathrm{bond}}` from
+# the positions of the three atoms of
 # each molecule at every frame, and take :math:`\dot{r}_{i,\mathrm{bond}}`
 # from finite differences of consecutive frames.
 
@@ -862,14 +912,3 @@ plt.show()
 #    statistical noise. The bottom surface alone with a +1 window would
 #    give the mirror image (all signs flipped) -- which is why the window
 #    is -1 there.
-# 3. Into the parametrization: the bond-frame derivatives
-#    :math:`\partial\mu/\partial r` and :math:`\partial\alpha/\partial r`
-#    of Eq. (2) are the transition moments, taken as constants from a
-#    reference calculation, and the geometry (bond orientation, bond
-#    velocity) does the rest. Lost are the dependence of the transition
-#    moments on the environment (non-Condon effects, partly restored by
-#    the empirical factor of Eq. (3)), the intermolecular polarization and
-#    charge transfer that the machine-learned dipoles contain, and
-#    everything outside the stretching region (bending, libration), which
-#    the bond velocities do not describe. The atomic route of Exercise 6
-#    removes these limitations.
