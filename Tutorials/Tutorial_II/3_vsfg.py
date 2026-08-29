@@ -485,13 +485,13 @@ plt.show()
 # gas-phase OH frequency. Before applying it, let's look at the factor
 # itself in the stretching region:
 
-nu_nc = np.linspace(2800, 4000, 200)
+nu_nc = np.linspace(2800, 3800, 200)
 x_nc = (3737.0 - nu_nc) / 6932.2
 factor_nc = (1.377 + 53.03 * x_nc) * (1.271 + 6.287 * x_nc)
 fig, ax = plt.subplots(1, 1, figsize=(6, 2.6), constrained_layout=True)
 ax.plot(nu_nc, factor_nc, "C1-", lw=1.5)
 ax.axhline(1, color="gray", lw=0.5, ls="--")
-ax.set_xlim(2800, 4000)
+ax.set_xlim(2800, 3800)
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
 ax.set_ylabel(r"$\mu'(\omega)\, \alpha'(\omega)$")
 plt.show()
