@@ -63,6 +63,9 @@ validation/sfg/f90_*.dat
 validation/sfg/py_*.dat
 validation/sfg/first_pair_list.dat
 
+# i-PI input with the per-folder socket address, written by the run_ex*.sh
+.input_run.xml
+
 # editor swap/backup files (never deploy these)
 .*.sw[op]
 *~

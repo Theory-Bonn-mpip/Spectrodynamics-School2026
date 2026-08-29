@@ -8,7 +8,7 @@ are comments.
 
 | file | content |
 |---|---|
-| `Raman-iso_n128_500ps_tau1.0.dat`, `Raman-aniso_n128_500ps_tau1.0.dat` | isotropic / anisotropic Raman spectra of 128 H₂O from 500 ps of trajectory, Eqs. (4)–(5) of the tutorial (no frequency prefactors, see Appendix A.5) |
+| `Raman-iso_n128_500ps_tau1.0.dat`, `Raman-aniso_n128_500ps_tau1.0.dat` | isotropic / anisotropic Raman spectra of 128 H₂O from 500 ps of trajectory, Eqs. (4)–(5) of the tutorial (no frequency prefactors) |
 
 MACE-MDP polarizabilities, correlation lag 1 ps, windowed cosine transform
 (`ir_raman.py -pol … -pol_type both`), from a long NVE run on a GPU cluster

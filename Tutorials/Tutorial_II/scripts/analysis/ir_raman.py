@@ -53,8 +53,9 @@ read directly.
               a_xx a_xy a_xz a_yx a_yy a_yz a_zx a_zy a_zz (a.u., bohr^3)
 
 At least one of the two is required. -skip N discards the first N frames
-of every file (i-PI replay runs write the first step twice, so use
--skip 1 for their extras files). Units only set the overall scale of
+of every file (an i-PI replay run evaluates its initial configuration
+before the replayed frames, so use -skip 1 when that configuration is also
+the first frame of the trajectory). Units only set the overall scale of
 C(t); peak positions do not depend on them.
 
 Output (per active channel: dip, iso, aniso)
@@ -276,8 +277,9 @@ def main():
     parser.add_argument("-lag", required=True, type=float, metavar="PS",
                         help="correlation length, in ps (ncf_step = lag/dt frames)")
     parser.add_argument("-skip", type=int, default=0, metavar="N",
-                        help="skip the first N frames of every file (i-PI replay "
-                             "runs write step 0 twice: use -skip 1)")
+                        help="skip the first N frames of every file (use 1 for an "
+                             "i-PI replay run whose initial configuration is "
+                             "also the first replayed frame)")
     parser.add_argument("-max", required=True, type=int, metavar="N", dest="nframes_max",
                         help="maximum number of frames to use")
     parser.add_argument("-pol_type", choices=["iso", "aniso", "both"], default="iso",

@@ -798,7 +798,8 @@ plt.show()
 # - N. Gönnheimer, K. Reuter, V. Kapil, and J. T. Margraf, "MACE-MDP: A
 #   General Dipole and Polarizability Model for Organic Molecules and
 #   Materials", ChemRxiv (2026).
-#   `DOI:10.26434/chemrxiv.15000716 <https://doi.org/10.26434/chemrxiv.15000716>`_
+#   `DOI:10.26434/chemrxiv.15000716/v2
+#   <https://chemrxiv.org/doi/full/10.26434/chemrxiv.15000716/v2>`_
 # - V. Kapil, D. P. Kovács, G. Csányi, and A. Michaelides, "First-principles
 #   spectroscopy of aqueous interfaces using machine-learned electronic and
 #   quantum nuclear effects", *Faraday Discuss.* **249**, 50-68 (2024).

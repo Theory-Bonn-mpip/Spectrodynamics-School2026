@@ -20,8 +20,10 @@ model_calc = MACECalculator(model_name, device='cpu', default_dtype='float32')
 # Attach the calculator to the atoms object
 atoms.calc = model_calc
 
-# Create unix client
-host = "mace-ex2"  # must match <address> in input.xml
+# Create unix client. The address must match <address> in input.xml;
+# run_ex2.sh replaces both by a name unique to this folder, so that students
+# sharing a machine in the school do not end up on the same socket.
+host = os.environ.get("IPI_ADDRESS", "mace-ex2")
 print("Setting up socket.")
 client = SocketClient(unixsocket=host)
 print("Running socket.")

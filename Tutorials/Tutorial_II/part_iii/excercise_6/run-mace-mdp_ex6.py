@@ -1,3 +1,4 @@
+import os
 import sys
 from ase.io import read
 from mace.calculators import MACECalculator
@@ -23,7 +24,10 @@ atoms.calc = model_calc
 # Create unix client. Besides the total dipole and polarizability it sends
 # their ATOMIC decomposition (charges, atomic dipoles and atomic
 # polarizabilities), which the SFG analysis needs (has_atomic=True)
-host = "mdp-ex6"  # must match <address> in input_mdp.xml
+# The address must match <address> in input_mdp.xml; run_ex6.sh replaces both
+# by a name unique to this folder, so that students sharing a machine in the
+# school do not end up on the same socket.
+host = os.environ.get("IPI_ADDRESS", "mdp-ex6")
 print("Setting up socket.")
 client = MDP_SocketClient(unixsocket=host, has_dipole=True, has_polarizability=True,
                           has_atomic=True,

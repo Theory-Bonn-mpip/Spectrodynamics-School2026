@@ -13,6 +13,11 @@ dynamics and `MACE <https://github.com/ACEsuit/mace>`_ machine-learning
 models for the interatomic potential and, later, for the dipoles and
 polarizabilities.
 
+**Before you start.** If you are running this notebook on the cloud machines
+provided during the school, everything is already installed -- you are good
+to go. If you are running it on your own machine, run ``./setup.sh`` once
+from the tutorial folder first.
+
 **How to use this tutorial.** Participants come from diverse backgrounds,
 so the main text is kept as light as possible and contains everything you
 need to follow the exercises. Deeper derivations and technical details
@@ -47,8 +52,7 @@ A third part, **optional**, lives in its own notebook, ``3_vsfg.ipynb``:
   - **Exercise 6**: VSFG spectra from machine-learned atomic dipoles and
     polarizabilities.
 
-It builds on Parts I and II, so go through them first; it needs the
-interface trajectory downloaded by ``./download_trajectories.sh``.
+It builds on Parts I and II, so go through them first.
 
 .. warning::
 
@@ -74,7 +78,7 @@ import numpy as np
 # ********************
 #
 # In this first part we set up and run a classical NVT molecular dynamics
-# simulation of bulk liquid water (32 molecules in a periodic cubic box) with
+# simulation of bulk liquid water (16 molecules in a periodic cubic box) with
 # ``i-PI`` driving the nuclei and a MACE machine-learned potential providing
 # the forces. Along the way we introduce the two codes, the structure of an
 # i-PI input file, and the basic checks one should always perform on an MD
@@ -97,7 +101,8 @@ import numpy as np
 # simulation into two independent tasks -- evaluating energies and forces for
 # a given configuration, and using those forces to evolve the nuclei.
 #
-# `i-PI <http://ipi-code.org>`_ exploits this separation and implements it as
+# `i-PI <http://ipi-code.org>`_ (Litman et al., *J. Chem. Phys.* 2024)
+# exploits this separation and implements it as
 # a *client--server* paradigm. i-PI is a *force engine*: acting as the
 # server, it is in command of the evolution of the nuclear positions, while
 # one or more instances of a client code handle the evaluation of energies,
@@ -155,7 +160,7 @@ import numpy as np
 #
 # `MACE <https://github.com/ACEsuit/mace>`_ is a machine-learning
 # architecture for predicting many-body atomic interactions (Batatia et al.,
-# *NeurIPS* 2022). It belongs to the family of *equivariant message-passing*
+# `NeurIPS 2022 <https://openreview.net/forum?id=YPpSngE-ZU>`_). It belongs to the family of *equivariant message-passing*
 # neural networks: each atom is described by features that transform
 # consistently under rotations, and these features are refined in a few
 # rounds of "messages" exchanged between neighbouring atoms. The distinctive
@@ -168,13 +173,16 @@ import numpy as np
 # analytical gradients of the energy, so energy conservation is built in.
 #
 # In this tutorial we use two pre-trained MACE models, both downloaded
-# into the ``MODELS/`` folder by ``./download_models.sh`` (or ``setup.sh``):
+# into the ``MODELS/`` folder:
 #
 # - ``MACE_MLIP.model``: an interatomic potential for water trained on
 #   revPBE-D3(0) reference data computed with FHI-aims. It provides the
 #   energies and forces that drive the molecular dynamics.
-# - ``MACE-MDP.model``: a general dipole and polarizability model built on
-#   the same equivariant architecture (Gönnheimer et al., 2026). It does not
+# - ``MACE-MDP.model``: a dipole and polarizability model built on the same
+#   equivariant architecture (the ``AtomicDielectricMACE`` class of
+#   Gönnheimer et al., 2026, extended to train on their position derivatives
+#   -- the Born effective charges and the Raman tensors), fitted to water
+#   clusters at the same revPBE-D3(0) level. It does not
 #   predict energies or forces; instead it returns atomic charges, dipoles
 #   and polarizabilities, which we will use in Exercises 3--4 to compute IR
 #   and Raman spectra, and again in the optional Part III for the
@@ -226,6 +234,7 @@ import numpy as np
 workdir = "part_i/excercise_1"
 
 # Open and read the XML file
+print(f"Inspecting {workdir}/input.xml\n")
 with open(f"{workdir}/input.xml", "r") as file:
     xml_content = file.read()
 print(xml_content)
@@ -255,7 +264,7 @@ print(xml_content)
 # - ``<ensemble>``: the target temperature, 300 K.
 # - ``<motion mode='dynamics'>`` / ``<dynamics mode='nvt'>``: constant-volume,
 #   constant-temperature dynamics with a time step of 0.5 fs, using a
-#   Langevin thermostat (``pile_l``; for a single bead this is a standard
+#   Langevin thermostat (``pile_l``; this is a standard
 #   white-noise Langevin thermostat acting on each atom) with a relaxation
 #   time of 200 fs.
 #
@@ -268,7 +277,7 @@ print(xml_content)
 #    picoseconds. Production runs simply use a much larger
 #    ``<total_steps>``. In the rest of the tutorial we keep running short
 #    trajectories ourselves and compare what we get with **converged
-#    reference results** obtained on a GPU cluster, which are provided with
+#    reference results** obtained on a cluster, which are provided with
 #    each exercise; already in this exercise we compare our short run with
 #    a longer reference one (see 1f).
 
@@ -281,6 +290,7 @@ print(xml_content)
 # the `Atomic Simulation Environment (ASE) <https://wiki.fysik.dtu.dk/ase>`_
 # to connect a MACE calculator to i-PI:
 
+print(f"Inspecting {workdir}/run-ase_ex1.py\n")
 with open(f"{workdir}/run-ase_ex1.py", "r") as file:
     print(file.read())
 
@@ -349,8 +359,7 @@ ipi_process = subprocess.Popen(
 time.sleep(5)  # wait for i-PI to start and open the socket
 
 # %%
-# Launch the MACE client(s): the force evaluation can be parallelized simply
-# by connecting more clients to the same socket.
+# Launch the MACE client(s): 
 
 n_clients = 1
 mace_logs = [open(f"{workdir}/mace_{i}.log", "w") for i in range(n_clients)]
@@ -371,6 +380,7 @@ time.sleep(5)  # wait for few seconds to allow mace launch and connect to i-pi
 # check the progress.
 # Note: you can re-run this cell as often as you like:
 
+print(f"Inspecting {workdir}/ipi.log\n")
 with open(f"{workdir}/ipi.log") as f:
     print("".join(f.readlines()[-15:]))
 
@@ -460,7 +470,9 @@ plt.show()
 # %%
 # Now the temperature, compared with the target value set in the
 # ``<ensemble>`` block of the input. We discard the first ``t_eq``
-# picoseconds as equilibration when computing the average:
+# picoseconds of the *reference* run as equilibration when computing its
+# average; our 0.15 ps demo is far too short for that, so its average uses
+# the whole trajectory:
 
 T_target = 300.0  # K, as in <ensemble> of input.xml
 t_eq = 0.00  # ps, equilibration time discarded from the average. Adjust this value
@@ -472,15 +484,18 @@ print(f"Expected standard deviation for N = {natoms} atoms: {T_std_canonical:.1f
 
 fig, axes = plt.subplots(1, 2, figsize=(9, 3), sharey=True, constrained_layout=True)
 for ax, (data, title) in zip(axes, runs):
-    mask = data["time"] > t_eq
+    # our 0.15 ps demo is shorter than t_eq, so discarding an equilibration
+    # period only makes sense for the 5 ps reference run
+    t_cut = t_eq if data is ref_data else 0.0
+    mask = data["time"] > t_cut
     T_avg = data["temperature"][mask].mean()
     T_std = data["temperature"][mask].std()
-    print(f"{title}: average temperature after {t_eq} ps = {T_avg:.1f} +/- {T_std:.1f} K")
+    print(f"{title}: average temperature after {t_cut} ps = {T_avg:.1f} +/- {T_std:.1f} K")
 
     ax.plot(data["time"], data["temperature"], "k-", lw=0.8, label="instantaneous")
     ax.axhline(T_target, color="r", ls="--", label=f"target ({T_target:.0f} K)")
     ax.axhline(T_avg, color="b", ls=":", label=f"average ({T_avg:.0f} K)")
-    ax.axvline(t_eq, color="gray", lw=0.5)
+    ax.axvline(t_cut, color="gray", lw=0.5)
     ax.set_title(title)
     ax.set_xlabel(r"$t$ / ps")
 axes[0].set_ylabel(r"$T$ / K")
@@ -491,7 +506,7 @@ plt.show()
 # **Questions** (answers at the end of the notebook):
 #
 # 1. In the reference run, which quantity shows a clear relaxation towards
-#    equilibrium, the potential energy or the temperature, and over what
+#    equilibrium, the potential energy and/or the temperature, and over what
 #    time? How much of the trajectory would you discard?
 # 2. Is the amplitude of the conserved-quantity fluctuations small compared
 #    to those of the potential energy?
@@ -564,9 +579,8 @@ chemiscope.show(
 # ensemble. Eq. (1) is the form implemented in
 # ``scripts/analysis/ir_raman.py``. It is equivalent to the more familiar
 # expression that correlates the dipole itself, at the price of a factor
-# :math:`\omega^2`, but is better behaved numerically under periodic
-# boundary conditions -- Appendix A.3 shows both the equivalence and the
-# reason, and Appendix A.2 explains how correlation functions are evaluated
+# :math:`\omega^2`, but is better behaved numerically
+# -- Appendix A.3 shows the equivalence, and Appendix A.2 explains how correlation functions are evaluated
 # in practice. The Raman spectra are obtained in the same way from the
 # polarizability tensor instead of the dipole (Exercise 4).
 #
@@ -614,9 +628,11 @@ chemiscope.show(
 # preserved, but for liquid water the *intensities* are a poor approximation,
 # because the transition dipoles depend strongly on the local
 # hydrogen-bonding environment (strong electrical anharmonicity / non-Condon
-# effects; see Schmidt, Corcelli and Skinner, *J. Chem. Phys.* **123**,
-# 044513 (2005), and Auer and Skinner, *J. Chem. Phys.* **128**, 224511
-# (2008)). Collective and intermolecular intensity features are lost.
+# effects; see Schmidt, Corcelli and Skinner
+# (`J. Chem. Phys. 123, 044513 (2005) <https://doi.org/10.1063/1.1961472>`_)
+# and Auer and Skinner
+# (`J. Chem. Phys. 128, 224511 (2008) <https://doi.org/10.1063/1.2925258>`_)).
+# Collective and intermolecular intensity features are lost.
 #
 # 2a) The simulation
 # ------------------
@@ -628,6 +644,7 @@ chemiscope.show(
 
 workdir_ex2 = "part_ii/excercise_2"
 
+print(f"Inspecting {workdir_ex2}/input.xml\n")
 with open(f"{workdir_ex2}/input.xml") as f:
     xml_ex2 = f.read()
 print(re.search(r"<motion.*?</motion>", xml_ex2, re.DOTALL).group(0))
@@ -637,10 +654,10 @@ print(re.search(r"<trajectory.*?</trajectory>", xml_ex2).group(0))
 # The dynamics is run in the **NVE** ensemble -- no thermostat. A thermostat
 # is needed to *sample* the canonical ensemble (Exercise 1), but it also
 # perturbs the dynamics: a Langevin thermostat, for instance, adds friction
-# and random kicks that broaden the vibrational lines (see Question 5 of
-# Exercise 1). Time correlation functions are therefore computed from NVE
-# trajectories, started from configurations (and velocities) drawn from an
-# equilibrated NVT run; ``init.xyz`` is such a snapshot. A common
+# and random kicks that broaden the vibrational lines (see Question 1 at the
+# end of this exercise). Time correlation functions are therefore computed
+# from NVE trajectories, started from configurations (and velocities) drawn
+# from an equilibrated NVT run; ``init.xyz`` is such a snapshot. A common
 # compromise is to keep a *weak* thermostat, i.e. one with a long
 # relaxation time ``tau`` (several picoseconds), which helps the sampling
 # over a long run while disturbing the dynamics only negligibly.
@@ -673,11 +690,14 @@ ex2_process = subprocess.Popen(["bash", "run_ex2.sh"], cwd=workdir_ex2) # (expec
 # While it runs we can peek at the i-PI log (re-run this cell as often as
 # you like):
 
+print(f"Inspecting {workdir_ex2}/ipi.log\n")
 with open(f"{workdir_ex2}/ipi.log") as f:
     print("".join(f.readlines()[-10:]))
 
 # %%
-# Wait for the simulation to finish before computing the spectrum:
+# Wait for the simulation to finish before computing the spectrum. This takes
+# about 13-16 minutes, so it is a good moment to go over the Appendix, or to
+# think about the questions of Exercise 1 if you skipped them:
 
 # run_ex2.sh returns when i-PI and the client have finished, so this call
 # blocks until the trajectory is complete (skip the cell and come back
@@ -710,10 +730,10 @@ ex2_process.wait()
 # - ``-dt`` is the time between *written* frames, here 4 steps of 0.5 fs =
 #   2 fs. This sampling interval sets the highest frequency the spectrum
 #   can contain, :math:`1/(2c\,\Delta t)` (the Nyquist frequency), which
-#   for 2 fs is about 8300 cm :math:`^{-1}` -- comfortably above the O--H
+#   for 2 fs is about 8300 :math:`\mathrm{cm}^{-1}` -- comfortably above the O--H
 #   stretch. Writing every step would only produce ten times more data for
 #   no gain; 2 fs is the standard choice for water, and one can push it to
-#   4 fs (Nyquist at 4200 cm :math:`^{-1}`) when disk space matters.
+#   4 fs (Nyquist at 4200 :math:`\mathrm{cm}^{-1}`) when disk space matters.
 # - ``-lag`` is the length :math:`\tau_{\max}` of the correlation
 #   function. It sets the frequency resolution
 #   (:math:`\approx 1/(c\,\tau_{\max})`) and must be long enough for the
@@ -768,24 +788,24 @@ plt.show()
 # Three bands are visible in the converged spectrum, which are the
 # fingerprint of liquid water:
 #
-# - the broad *librational* band below about 1000 cm :math:`^{-1}`
+# - the broad *librational* band below about 1000 :math:`\mathrm{cm}^{-1}`
 #   (hindered rotations of the molecules in the hydrogen-bond network);
-# - the H--O--H *bending* mode near 1650 cm :math:`^{-1}`;
+# - the H--O--H *bending* mode near 1650 :math:`\mathrm{cm}^{-1}`;
 # - the O--H *stretching* band between roughly 3000 and 3700
-#   cm :math:`^{-1}`, whose width reflects the distribution of
+#   :math:`\mathrm{cm}^{-1}`, whose width reflects the distribution of
 #   hydrogen-bonding environments.
 #
 # The 1 ps spectrum shows the same bands at the same positions, but it is
 # far from converged: the band shapes are distorted by statistical noise,
 # since only 250 time origins contribute to each lag of the correlation
 # function, and the short lag of 0.5 ps limits the resolution to about
-# 70 cm :math:`^{-1}`.
+# 70 :math:`\mathrm{cm}^{-1}`.
 #
 # Even 50 or 100 ps is not the end of the story. The *integrated*
 # intensity of each band changes by only a few per cent between 50 and
 # 500 ps -- the total is fixed by the average kinetic energy of the atoms
 # -- but the peak heights still move by 8--12 %, and the top of the very
-# flat librational band wanders by some tens of cm :math:`^{-1}`.
+# flat librational band wanders by some tens of :math:`\mathrm{cm}^{-1}`.
 # This is the central practical lesson of Part II: spectra are statistical
 # quantities, they converge slowly with the length of the trajectory, and
 # the *shape* of a band converges much more slowly than its area.
@@ -820,12 +840,12 @@ plt.show()
 # The four curves coincide where they overlap -- they are the same
 # function, computed from the same trajectory, and differ only in how far
 # they extend. The fast oscillations are the intramolecular vibrations;
-# their envelope decays within a few hundred femtoseconds: it is at 9 % of
-# :math:`C_{vv}(0)` after 0.1 ps, at 1.5 % after 0.5 ps and below 1 % after
+# their envelope decays within a few hundred femtoseconds: it is at 13 % of
+# :math:`C_{vv}(0)` after 0.1 ps, at 0.7 % after 0.5 ps and below 0.2 % after
 # 1 ps (right panel, note the vertical scale). Truncating the function at
 # 0.1, 0.5, 1 or 2 ps therefore throws away very little of the signal --
 # but it does set the frequency resolution :math:`1/(c\,\tau_{\max})`,
-# which for these four lags is 330, 67, 33 and 17 cm :math:`^{-1}`. Here
+# which for these four lags is 330, 67, 33 and 17 :math:`\mathrm{cm}^{-1}`. Here
 # are the corresponding spectra:
 
 fig, ax = plt.subplots(1, 1, figsize=(5.5, 3.2), constrained_layout=True)
@@ -842,11 +862,11 @@ plt.show()
 # What matters is how the resolution compares with the *intrinsic* width of
 # each feature:
 #
-# - with a lag of 0.1 ps the resolution (330 cm :math:`^{-1}`) is worse
+# - with a lag of 0.1 ps the resolution (330 :math:`\mathrm{cm}^{-1}`) is worse
 #   than the width of every band: the bending peak is smeared to a third of
 #   its height and the two broad bands are visibly washed out;
 # - the broad librational and stretching bands, which are hundreds of
-#   cm :math:`^{-1}` wide, are already converged with a lag of 0.5 ps;
+#   :math:`\mathrm{cm}^{-1}` wide, are already converged with a lag of 0.5 ps;
 # - the narrow bending peak is the slowest: its height still grows by 14 %
 #   from 0.5 to 1 ps and by another 4 % from 1 to 2 ps.
 #
@@ -882,8 +902,8 @@ plt.show()
 #
 # - its librational band is more intense;
 # - its stretching band is more intense and sits a few tens of
-#   cm :math:`^{-1}` lower;
-# - below about 300 cm :math:`^{-1}` -- the region of intermolecular
+#   :math:`\mathrm{cm}^{-1}` lower;
+# - below about 300 :math:`\mathrm{cm}^{-1}` -- the region of intermolecular
 #   translations -- it has *less* intensity than the larger boxes;
 # - the intramolecular bend is unaffected.
 #
@@ -946,9 +966,12 @@ workdir_ex3 = "part_ii/excercise_3"
 #   the other bands, and its shape is wrong.
 #
 # (The classic mixed quantum/classical calculations of Skinner and
-# co-workers -- Auer, Kumar, Schmidt and Skinner, *Proc. Natl. Acad. Sci.
-# USA* **104**, 14215 (2007); Auer and Skinner, *J. Chem. Phys.* **128**,
-# 224511 (2008) -- also run the dynamics with the SPC/E model, but obtain
+# co-workers -- Auer, Kumar, Schmidt and Skinner
+# (`Proc. Natl. Acad. Sci. USA 104, 14215 (2007)
+# <https://doi.org/10.1073/pnas.0701482104>`_); Auer and Skinner
+# (`J. Chem. Phys. 128, 224511 (2008)
+# <https://doi.org/10.1063/1.2925258>`_) -- also run the dynamics with the
+# SPC/E model, but obtain
 # the OH stretch frequencies and transition dipoles from *spectroscopic
 # maps* of the local electric field, precisely to capture the environment
 # dependence that fixed charges alone cannot.)
@@ -1039,7 +1062,7 @@ plt.show()
 # The differences between the two curves are the transition dipoles at
 # work:
 #
-# - Below about 300 cm :math:`^{-1}` the VDOS has considerable intensity
+# - Below about 300 :math:`\mathrm{cm}^{-1}` the VDOS has considerable intensity
 #   (translations of whole molecules and hydrogen-bond stretching), but
 #   the IR spectrum has almost none: a neutral molecule moving rigidly
 #   does not change the dipole of the cell.
@@ -1070,12 +1093,17 @@ plt.show()
 # --------------------------------------------
 #
 # Instead of fixed charges, we now use a machine-learning model trained to
-# predict the environment-dependent dipole moment. Specifically, we use
-# **MACE-MDP** (`Gönnheimer, et al., ChemRxiv (2026)
-# <https://doi.org/10.26434/chemrxiv.15000716>`_), a general dipole and
-# polarizability model built on the equivariant MACE architecture (the
-# ``AtomicDielectricMACE`` class of the `MACE package
-# <https://github.com/ACEsuit/mace>`_). Unlike the MLIP that drives the
+# predict the environment-dependent dipole moment. It is built on the
+# ``AtomicDielectricMACE`` architecture of the `MACE package
+# <https://github.com/ACEsuit/mace>`_, introduced by
+# `Gönnheimer, et al., ChemRxiv (2026)
+# <https://chemrxiv.org/doi/full/10.26434/chemrxiv.15000716/v2>`_ and
+# extended here to train on the position derivatives of the dipole and the
+# polarizability as well -- the Born effective charges and the Raman
+# tensors. The model used in this tutorial was fitted to cluster dipoles and
+# polarizabilities, and their position derivatives, at the same revPBE-D3(0)
+# level as the interatomic potential of Exercise 1, so that the dynamics and
+# the electrical response are consistent. Unlike the MLIP that drives the
 # dynamics, this model does not predict energies and forces: it outputs, for
 # each atom :math:`i`, a scalar partial charge :math:`q_i`, an atomic dipole
 # vector :math:`\boldsymbol{\mu}_i`, and atomic (isotropic + anisotropic)
@@ -1093,11 +1121,6 @@ plt.show()
 # fixed point charges miss, and gives quantitatively meaningful IR
 # intensities.
 #
-# MACE-MDP is trained on the SPICE-:math:`\alpha` dataset (~1.6 million
-# charge-neutral organic structures, including a dedicated water subset) with
-# dipoles and polarizabilities computed at the
-# :math:`\omega`\ B97M-D3(BJ)/def2-TZVPPD level of theory. 
-#
 # Replaying the trajectory
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -1107,6 +1130,7 @@ plt.show()
 # The whole run is wrapped in ``run_ex3.sh``; let's first look at the i-PI
 # input it uses, ``input_mdp.xml``:
 
+print(f"Inspecting {workdir_ex3}/input_mdp.xml\n")
 with open(f"{workdir_ex3}/input_mdp.xml") as f:
     xml_ex3 = f.read()
 print('...')
@@ -1129,6 +1153,7 @@ print('...')
 # The client, ``run-mace-mdp_ex3.py``, differs from the one of Exercise 1
 # in the model it loads and in what it sends back:
 
+print(f"Inspecting {workdir_ex3}/run-mace-mdp_ex3.py\n")
 with open(f"{workdir_ex3}/run-mace-mdp_ex3.py") as f:
     print(f.read())
 
@@ -1142,13 +1167,14 @@ with open(f"{workdir_ex3}/run-mace-mdp_ex3.py") as f:
 #   (``has_polarizability``) into the extras, converted to atomic units.
 #
 # Let's launch the replay. It evaluates the model on 500 frames, which takes
-# a few minutes on a CPU (seconds on a GPU):
+# about 5-10 minutes on a CPU (much faster in a GPU):
 
-ex3_process = subprocess.Popen(["bash", "run_ex3.sh"], cwd=workdir_ex3) # (expected running time 8-10 min)
+ex3_process = subprocess.Popen(["bash", "run_ex3.sh"], cwd=workdir_ex3) # (expected running time about 5-10 min)
 
 # %%
 # While it runs we can peek at the i-PI log (re-run as often as you like):
 
+print(f"Inspecting {workdir_ex3}/ipi.log\n")
 with open(f"{workdir_ex3}/ipi.log") as f:
     print("".join(f.readlines()[-10:]))
 
@@ -1166,8 +1192,10 @@ ex3_process.wait()
 # The dipole and the polarizability are written as plain text, one block
 # per step:
 
+print(f"Inspecting {workdir_ex3}/mdp.dipole_0\n")
 with open(f"{workdir_ex3}/mdp.dipole_0") as f:
     print("".join(f.readlines()[:6]))
+print(f"Inspecting {workdir_ex3}/mdp.polarizability_0\n")
 with open(f"{workdir_ex3}/mdp.polarizability_0") as f:
     print("".join(f.readlines()[:2]))
 
@@ -1176,8 +1204,13 @@ with open(f"{workdir_ex3}/mdp.polarizability_0") as f:
 #   components of the total dipole (atomic units, :math:`e\,a_0`) or the
 #   nine components of the polarizability tensor (row-major
 #   :math:`3 \times 3`, :math:`a_0^3`).
-# - A replay run evaluates the first frame twice (step 0 appears two
-#   times), so the first entry must be skipped: ``ir_raman.py -skip 1``.
+# - i-PI first evaluates the configuration it was *initialized* with (the
+#   ``<initialize>`` block) and only afterwards the frames of the replayed
+#   trajectory. Here that initial configuration, ``init.xyz``, is exactly the
+#   first frame of the trajectory we replay, so the first record appears
+#   twice and has to be dropped: ``ir_raman.py -skip 1``. This is a
+#   consequence of our particular setup, not a general feature of replay
+#   runs: with a different reference geometry nothing would need skipping.
 #
 # Computing the IR spectrum
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1220,7 +1253,7 @@ plt.show()
 # Then the system-size comparison, per molecule, from the 500 ps runs:
 
 fig, ax = plt.subplots(1, 1, figsize=(5.5, 3.2), constrained_layout=True)
-for n_water in [16, 32, 64, 128]:
+for n_water in [16, 32, 64]:
     ref = np.loadtxt(f"{ref_ex3}/IR-mdp_n{n_water:03d}_500ps_tau1.0.dat")
     ax.plot(ref[:, 0], ref[:, 1] / n_water, lw=1, label=f"{n_water} H$_2$O")
 ax.set_xlim(0, 4000)
@@ -1238,21 +1271,23 @@ plt.show()
 # converge more slowly than band areas.
 #
 # The system-size comparison shows a finite-size effect that the VDOS only
-# hinted at, and it is *not* converged at 128 molecules:
+# hinted at:
 #
-# - the stretching band blue-shifts monotonically with the size of the box,
-#   from 3424 cm :math:`^{-1}` for 16 molecules to 3473 cm :math:`^{-1}`
-#   for 128;
-# - its per-molecule intensity rises by 13 % from 16 to 32 molecules, is
-#   unchanged from 32 to 64, and rises by another 9 % from 64 to 128;
-# - the 16-water box also has the weakest librational band and, as in
-#   Exercise 2, too little intensity below 300 cm :math:`^{-1}`.
+# - the per-molecule intensity of the stretching band rises by 13 % from 16
+#   to 32 molecules and then by only 1 % from 32 to 64, so 32 molecules are
+#   enough to converge it;
+# - the 16-water box also has the weakest librational band and too little
+#   intensity below 300 :math:`\mathrm{cm}^{-1}`, and this too is converged
+#   by 32 molecules;
+# - the band *positions* drift a little longer: the stretching maximum moves
+#   from 3424 :math:`\mathrm{cm}^{-1}` for 16 molecules to 3445 for 32 and
+#   3457 for 64.
 #
 # The total dipole of a box is a *collective* quantity, a sum over
 # molecules whose orientations stay correlated over several hydrogen-bond
-# lengths, so the IR spectrum is far more sensitive to the box size than
-# the VDOS of Exercise 2, which is a sum over single-atom velocities. Keep
-# this in mind when you see "converged" spectra in the literature.
+# lengths, so a box that is large enough for one observable need not be
+# large enough for another. Keep this in mind when you see "converged"
+# spectra in the literature.
 
 # %%
 # Comparison with experiment
@@ -1265,11 +1300,12 @@ plt.show()
 # maximum:
 
 ir_spce_ref16 = np.loadtxt(f"{ref_ex3}/IR-spce_n016_500ps_tau1.0.dat")
+ir_mdp_ref64 = np.loadtxt(f"{ref_ex3}/IR-mdp_n064_500ps_tau1.0.dat")
 ir_exp = np.loadtxt(f"{ref_ex3}/IR_raw.dat")
 
 fig, ax = plt.subplots(1, 1, figsize=(5.5, 3.2), constrained_layout=True)
 ax.plot(ir_spce_ref16[:, 0], ir_spce_ref16[:, 1] / ir_spce_ref16[:, 1].max(), "b-", lw=1, label="SPC/E dipoles (500 ps)")
-ax.plot(ir_mdp_ref16[:, 0], ir_mdp_ref16[:, 1] / ir_mdp_ref16[:, 1].max(), "g-", lw=1, label="MACE-MDP dipoles (500 ps)")
+ax.plot(ir_mdp_ref64[:, 0], ir_mdp_ref64[:, 1] / ir_mdp_ref64[:, 1].max(), "g-", lw=1, label="MACE-MDP dipoles (500 ps)")
 ax.plot(ir_exp[:, 0], ir_exp[:, 1] / ir_exp[:, 1].max(), "k-", lw=1, label="experiment")
 ax.set_xlim(0, 4000)
 ax.set_xlabel(r"$\omega$ / cm$^{-1}$")
@@ -1278,23 +1314,22 @@ ax.legend()
 plt.show()
 
 # %%
-# - **Intensities.** With the machine-learned dipoles the relative
-#   intensities of the three bands are essentially those of the
-#   experiment: the stretching band dominates, the bend is weak, and the
-#   librational band is in between -- whereas the SPC/E spectrum has the
-#   bend as its strongest feature. Polarization and charge transfer along
-#   the hydrogen bonds, learned by MACE-MDP from the electronic structure,
-#   are what give the O--H stretch its large transition dipole.
+# With the machine-learned dipoles the relative intensities of the three
+# bands are essentially those of the experiment: the stretching band
+# dominates, the bend is weak, and the librational band is in between --
+# whereas the SPC/E spectrum has the bend as its strongest feature.
+# Polarization and charge transfer along the hydrogen bonds, learned by
+# MACE-MDP from the electronic structure, are what give the O--H stretch its
+# large transition dipole.
 #
 # **Questions** (answers at the end of the notebook):
 #
 # 3. Why did we evaluate the dipoles by *replaying* the trajectory of
 #    Exercise 2 rather than running a new simulation with the MACE-MDP
 #    model as the client?
-# 4. The MACE-MDP and SPC/E spectra come from the *same* trajectory. Which
-#    of the two conclusions -- about band positions and about band
-#    intensities -- follows from this, and what would you need to change to
-#    improve the other?
+# 4. The MACE-MDP and SPC/E spectra were computed from the *same*
+#    trajectory. Which features of the spectrum can a better dipole model
+#    change, and which cannot?
 
 
 # %%
@@ -1344,8 +1379,9 @@ plt.show()
 #   sensitive to molecular reorientation (librations) as well as to the
 #   stretching modes. The ratio of the two is the depolarization ratio
 #   (for the theory and a detailed interpretation of the IR, VV and VH
-#   spectra of water see Auer and Skinner, *J. Chem. Phys.* **128**, 224511
-#   (2008)).
+#   spectra of water see Auer and Skinner,
+#   `J. Chem. Phys. 128, 224511 (2008)
+#   <https://doi.org/10.1063/1.2925258>`_).
 
 # %%
 # 4a) Computing the Raman spectra
@@ -1373,15 +1409,12 @@ subprocess.run(["bash", "get_spectra_016.sh"], cwd=workdir_ex4, check=True)
 #
 # The Raman spectra have to be converged with the simulation time and with
 # the system size exactly as the IR spectrum of Exercise 3, and we do not
-# repeat those checks here. One thing is worth knowing: the *isotropic*
-# component is by far the slowest to converge. The isotropic
-# polarizability :math:`a` is a single scalar for the whole box, so its
-# correlation function has far fewer independent contributions than a sum
-# over atoms or tensor components. The 1 ps spectra we have just computed
+# repeat those checks here. 
+# The 1 ps spectra we have just computed
 # are therefore very noisy, and the comparison below uses a well converged
-# reference: 128 water molecules and 500 ps.
+# reference: 64  water molecules and 500 ps.
 #
-# Because the Raman bands below 2000 cm :math:`^{-1}` are much weaker than
+# Because the Raman bands below 2000 :math:`\mathrm{cm}^{-1}` are much weaker than
 # the stretching band, we show every spectrum in two panels -- the
 # low-frequency region magnified by a factor that is printed in the panel,
 # and the stretching region on its own scale -- for the isotropic (top)
@@ -1419,7 +1452,9 @@ def plot_raman(curves, ylabel):
 # ------------------------------
 #
 # The experimental spectra in ``reference_results`` (see its ``README.md``)
-# were digitized from Fig. 4 of Marsalek and Markland. They are reported
+# were digitized from Fig. 4 of Marsalek and Markland
+# (`J. Phys. Chem. Lett. 8, 1545 (2017)
+# <https://doi.org/10.1021/acs.jpclett.7b00391>`_). They are reported
 # in the same convention as Eqs. (4)-(5), so no frequency-dependent
 # prefactor has to be applied to either of them; both are simply
 # normalized to their maximum:
@@ -1428,38 +1463,30 @@ ref_ex4 = f"{workdir_ex4}/reference_results"
 
 curves = {}
 for comp in ["iso", "aniso"]:
-    ref = np.loadtxt(f"{ref_ex4}/Raman-{comp}_n128_500ps_tau1.0.dat")
+    ref = np.loadtxt(f"{ref_ex4}/Raman-{comp}_n064_500ps_tau1.0.dat")
     exp = np.loadtxt(f"{ref_ex4}/experiment_Raman-{comp}.dat")
-    curves[comp] = [(ref[:, 0], ref[:, 1] / ref[:, 1].max(), "g-", "MACE-MDP (128 H$_2$O, 500 ps)"),
+    curves[comp] = [(ref[:, 0], ref[:, 1] / ref[:, 1].max(), "g-", "MACE-MDP (64 H$_2$O, 500 ps)"),
                     (exp[:, 0], exp[:, 1] / exp[:, 1].max(), "k-", "experiment")]
 plot_raman(curves, "normalized intensity")
 
 # %%
-# - Both components reproduce the experimental band shapes well: the
-#   isotropic spectrum is a single stretching band, and the anisotropic one
-#   is dominated by the stretching band with weak librational and bending
-#   features. The isotropic band is broader on its low-frequency side,
-#   where the strongly hydrogen-bonded O--H groups absorb.
-# - The *relative* intensities come out right: with both curves normalized
-#   to their maximum, the weight of the whole 200-2000 cm :math:`^{-1}`
-#   region relative to the stretching band matches the experiment to 1 %
-#   for the anisotropic component and to about 30 % for the isotropic one,
-#   which is remarkable given that no adjustable factor is involved.
-# - The band *positions* are less good, and in a revealing way. The
-#   anisotropic maximum is almost exact (3465 cm :math:`^{-1}` against
-#   3476 in the experiment), but the isotropic one is blue-shifted by more
-#   than 100 cm :math:`^{-1}` (3367 against 3256). In the experiment the
-#   two components peak 220 cm :math:`^{-1}` apart, in our spectra only
-#   100: the model underestimates how differently the two components weigh
-#   the hydrogen-bonding environments. The isotropic spectrum is the one
-#   that reports on the strongly hydrogen-bonded, low-frequency side of
-#   the stretching band -- the same region that classical nuclei and the
-#   potential energy surface describe least well.
-# - Below about 300 cm :math:`^{-1}` our anisotropic spectrum has clearly
-#   too little intensity: the hydrogen-bond stretching band near
-#   180 cm :math:`^{-1}` is present but much weaker than measured. This is
-#   also the region where the digitized experimental curves are least
-#   reliable, so it should not be over-interpreted.
+# - Both components are reproduced reasonably well. It is worth pausing on
+#   what that means: these spectra are a *full ab initio prediction* -- the
+#   dynamics comes from a potential fitted to revPBE-D3(0), the
+#   polarizabilities from a model fitted at the same level of theory, and
+#   not a single parameter was adjusted to the experiment.
+# - The stretching region agrees better than one might expect from either
+#   ingredient alone. This is a known compensation of errors: the
+#   over-delocalization of GGA functionals and the neglect of nuclear
+#   quantum effects shift the band in opposite directions and partly cancel
+#   (Marsalek and Markland,
+#   `J. Phys. Chem. Lett. 8, 1545 (2017)
+#   <https://doi.org/10.1021/acs.jpclett.7b00391>`_).
+# - In the low-frequency region the overall shape is right, but the
+#   spectrum is clearly different from the measured one.
+# - Improving either region needs better reference methods -- for the
+#   potential energy surface and for the polarizability surface alike --
+#   rather than more sampling.
 # %%
 # Take-home messages of Part II
 # -----------------------------
@@ -1502,9 +1529,7 @@ plot_raman(curves, "normalized intensity")
 #   dipoles and polarizabilities of every molecule.
 #
 # Open ``3_vsfg.ipynb`` whenever you like -- during the session if you get
-# here early, or afterwards. It needs the interface trajectory that
-# ``./download_trajectories.sh`` downloads into
-# ``part_iii/trajectory_files``.
+# here early, or afterwards. 
 
 # %%
 # Appendix
@@ -1633,9 +1658,11 @@ plot_raman(curves, "normalized intensity")
 # For very long correlation times the double loop over origins and lags
 # (cost :math:`\propto M^2`) can be replaced by a fast-Fourier-transform
 # evaluation based on the Wiener--Khinchin theorem (cost
-# :math:`\propto M \log M`). The scripts here keep the explicit sum for
-# clarity and use the FFT only for the final cosine transform to the
-# frequency domain.
+# :math:`\propto M \log M`). The scripts here implement the explicit sum as
+# the default, because it reads like the formula above, and select the
+# Wiener--Khinchin evaluation when ``-corr fft`` is passed; the analysis
+# commands of Part II use ``-corr fft`` throughout. The final cosine
+# transform to the frequency domain is always done with an FFT.
 #
 #
 # A.3 Equivalence of the dipole and dipole-derivative forms of the IR spectrum
@@ -1751,6 +1778,15 @@ plot_raman(curves, "normalized intensity")
 #
 # - M. E. Tuckerman, *Statistical Mechanics: Theory and Molecular
 #   Simulation*, Oxford University Press, Oxford (2010).
+# - Y. Litman, V. Kapil, Y. M. Y. Feldman, et al., "i-PI 3.0: A flexible and
+#   efficient framework for advanced atomistic simulations",
+#   *J. Chem. Phys.* **161**, 062504 (2024).
+#   `DOI:10.1063/5.0215869 <https://doi.org/10.1063/5.0215869>`_
+# - I. Batatia, D. P. Kovács, G. N. C. Simm, C. Ortner, and G. Csányi,
+#   "MACE: Higher Order Equivariant Message Passing Neural Networks for Fast
+#   and Accurate Force Fields", *Advances in Neural Information Processing
+#   Systems* **35**, 11423-11436 (2022).
+#   `OpenReview <https://openreview.net/forum?id=YPpSngE-ZU>`_
 # - C. Haggard, Y. Litman, and S. C. Althorpe, "Infrared and Raman
 #   perspectives on vibrational coupling in liquid water",
 #   *J. Chem. Phys.* **164**, 144120 (2026).
@@ -1772,8 +1808,13 @@ plot_raman(curves, "normalized intensity")
 #   effects in the ultrafast infrared spectroscopy of water",
 #   *J. Chem. Phys.* **123**, 044513 (2005).
 #   `DOI:10.1063/1.1961472 <https://doi.org/10.1063/1.1961472>`_
-# - The MACE-MDP models used here are described in Litman et al.,
-#   *in preparation* (see ``MODELS/README.md``).
+# - N. Gönnheimer, K. Reuter, V. Kapil, and J. T. Margraf, "MACE-MDP: A
+#   General Dipole and Polarizability Model for Organic Molecules and
+#   Materials", *ChemRxiv* (2026), preprint.
+#   `DOI:10.26434/chemrxiv.15000716/v2
+#   <https://chemrxiv.org/doi/full/10.26434/chemrxiv.15000716/v2>`_
+# - The SFG extension of MACE-MDP used in Part III is described in
+#   Litman et al., *in preparation* (see ``MODELS/README.md``).
 # %%
 # Answers to the questions
 # ========================
@@ -1781,16 +1822,10 @@ plot_raman(curves, "normalized intensity")
 # Exercise 1
 # ----------
 #
-# 1. In this particular case it is the *temperature*: the reference run
-#    starts from an equilibrated liquid configuration, so its potential
-#    energy fluctuates around a stationary value from the very beginning,
-#    but the velocities were freshly drawn and the instantaneous temperature
-#    starts about 30 K below the target and is pulled up by the thermostat
-#    over roughly a picosecond -- a few relaxation times :math:`\tau`. The
-#    fluctuations are so large that this is easier to see in a running
-#    average than by eye: the mean temperature is 272 K over the first
-#    0.25 ps, 297 K between 0.5 and 1 ps, and 311 K afterwards. One would
-#    discard that first picosecond. Starting instead from a poorly
+# 1. The reference run starts from an equilibrated liquid configuration, so its potential
+#    energy and the temperature fluctuates around a stationary value from the very beginning.
+#    So in this case, there is no need to discard any initial part of the trajectory
+#    Starting instead from a poorly
 #    relaxed structure, the potential energy would show an equally clear
 #    drift; which quantity relaxes visibly depends on how the run was
 #    started, which is why one always looks at both.
@@ -1806,7 +1841,7 @@ plot_raman(curves, "normalized intensity")
 #    instantaneous temperature is about 35 K for 48 atoms (Appendix A.1),
 #    and the statistical error of the average is much smaller than that,
 #    since it decreases with the number of *independent* samples in the
-#    trajectory. The temperature decorrelates on the scale of the thermostat
+#    trajectory. As a first approximatio, we can assume that the temperature decorrelates on the scale of the thermostat
 #    relaxation time, so the 5 ps reference run contains of the order of 25
 #    independent samples and its average carries an uncertainty of several
 #    kelvin -- an average some 10 K above the target is still compatible
@@ -1836,7 +1871,7 @@ plot_raman(curves, "normalized intensity")
 #    enough system, a single NVE trajectory samples a microcanonical shell
 #    whose averages coincide with the canonical ones -- the ensemble
 #    equivalence assumed in Appendix A.2). In practice one averages over
-#    several NVE runs started from different NVT snapshots.
+#    several NVE runs started from different snapshots taken from long or independent NVT runs.
 # 2. The VDOS weights every motion by its kinetic energy, whereas the IR
 #    spectrum weights it by the square of the transition dipole. For water
 #    the stretching and librational bands carry by far the largest dipole
@@ -1870,11 +1905,10 @@ plot_raman(curves, "normalized intensity")
 #    differ *only* through the dipole model. A new simulation would in
 #    addition require a model that provides forces, which MACE-MDP does
 #    not.
-# 4. Because the trajectory is the same, the band *positions* are
-#    identical in the two spectra: they are set by the potential energy
-#    surface (the MACE potential) and by the classical treatment of the
-#    nuclei. Only the band *intensities* change, and these are what the
-#    MACE-MDP model fixes. To move the positions one would need a better
-#    potential and/or the inclusion of nuclear quantum effects, not a
-#    better dipole.
+# 4. Only the *intensities*. The band positions are set by the trajectory --
+#    that is, by the potential energy surface and by treating the nuclei
+#    classically -- so they are identical in the two spectra. A better dipole
+#    changes how strongly each mode absorbs, not where it absorbs; to move
+#    the positions one needs a better potential and/or nuclear quantum
+#    effects.
 #

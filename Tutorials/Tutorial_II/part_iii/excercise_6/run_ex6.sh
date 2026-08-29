@@ -11,9 +11,21 @@ TRAJ=../trajectory_files/slab_lx10_ly10_lz100_n48_01/traj.xyz
 command -v i-pi >/dev/null || { echo "i-pi not found: activate the tutorial environment first"; exit 1; }
 [ -f $TRAJ ] || { echo "slab trajectory not found: $TRAJ"; exit 1; }
 bash clean.sh
-rm -f /tmp/ipi_mdp-ex6            # stale socket of an interrupted run
+
+# i-PI and the client talk through /tmp/ipi_<address>, which is shared by
+# everyone on the machine, so we give this folder its own address: on the
+# school's cloud machines several students run the same exercise at the same
+# time, and a fixed address would make the second one fail to start.
+ADDR="mdp-ex6_$(printf '%s' "$PWD" | cksum | cut -d' ' -f1)"
+SOCK="/tmp/ipi_${ADDR}"
+rm -f "$SOCK"                     # socket left behind by an interrupted run
+trap 'rm -f "$SOCK"' EXIT         # and do not leave one ourselves
+sed "s|<address>.*</address>|<address>${ADDR}</address>|" input_mdp.xml > .input_run.xml
+echo "i-PI socket: ${SOCK}"
+
 export PYTHONUNBUFFERED=1
-i-pi input_mdp.xml > ipi.log 2>&1 &
+export IPI_ADDRESS="$ADDR"        # picked up by run-mace-mdp_ex6.py
+i-pi .input_run.xml > ipi.log 2>&1 &
 sleep 10
 python3 run-mace-mdp_ex6.py > mdp_0.log 2>&1
 wait

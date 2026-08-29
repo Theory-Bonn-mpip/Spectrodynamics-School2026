@@ -27,10 +27,30 @@ def _inline(text):
     return text
 
 
+# An RST link `text <url>`_ may be wrapped over at most this many lines.
+MAX_LINK_LINES = 10
+
+_LINK_WRAPPED = re.compile(
+    # the text may hold MAX_LINK_LINES - 2 line breaks; the \s* before the URL
+    # may add one more, for MAX_LINK_LINES lines in total
+    r'`((?:[^`<>\n]*\n){0,%d}[^`<>\n]*?)\s*<([^>]+?)>`_+' % (MAX_LINK_LINES - 2)
+)
+
+
+def _join_link(match):
+    """Collapse a link that was wrapped over several source lines."""
+    text = ' '.join(match.group(1).split())
+    url = ''.join(match.group(2).split())
+    return '`%s <%s>`_' % (text, url)
+
+
 def rst_to_md(rst_text):
     """Convert an RST text block to GitHub-flavored markdown."""
-    # join RST links wrapped across a line break: `text\n<url>`_ → `text <url>`_
-    rst_text = re.sub(r'`([^`<>]*?)\s*\n\s*<([^>]+?)>`_+', r'`\1 <\2>`_', rst_text)
+    # join RST links wrapped across line breaks: `text\n<url>`_ → `text <url>`_.
+    # The link text may span up to MAX_LINK_LINES lines; the bound keeps a
+    # stray backtick from swallowing a whole paragraph. All internal
+    # whitespace is collapsed, and whitespace inside the URL is removed.
+    rst_text = _LINK_WRAPPED.sub(_join_link, rst_text)
     # join :math:`...` spans wrapped across line breaks (the closing backtick
     # blocks the match, so completed spans are left alone); loop because each
     # pass only joins one break per span

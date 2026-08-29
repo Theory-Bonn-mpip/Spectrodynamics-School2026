@@ -85,7 +85,7 @@ Output (all names take the optional -prefix)
 Example
 -------
   python3 ssvvcf_ml.py -f traj.xyz -cell 10 10 100 -dt 0.002 -lag 1 \
-                       -max 25000 -zref1 4 -zref2 8 -non_condon
+                       -max 25000 -zref1 4 -zref2 5 -rc 1.0 -non_condon
 """
 
 import argparse

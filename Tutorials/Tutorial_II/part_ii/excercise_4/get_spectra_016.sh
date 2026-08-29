@@ -3,7 +3,8 @@
 # polarizabilities. The polarizabilities were written by the replay run of
 # Exercise 3 (mdp.polarizability_0), so we only copy the file here and run
 # the analysis; -pol_type both gives the isotropic and anisotropic spectra.
-# Replay runs write the first step twice, hence -skip 1. The reference files
+# The replay of Exercise 3 is initialized with
+# init.xyz, which is also its first replayed frame, hence -skip 1. The reference files
 # in reference_results/ were obtained with the same command on the first
 # 50 ps of the reference trajectories (-max 25000 -lag 1).
 cd "$(dirname "$0")"

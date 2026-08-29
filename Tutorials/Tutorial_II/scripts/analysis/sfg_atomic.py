@@ -147,7 +147,8 @@ def read_property_frames(filename, values_per_frame, max_frames, skip=0):
 
     Lines starting with '#' (raw i-PI extras comments) and blank lines are
     skipped; a frame may span several lines. The first `skip` frames are
-    discarded (i-PI replay runs write step 0 twice: use skip=1).
+    discarded (use skip=1 for an i-PI replay run whose initial configuration
+    is also the first replayed frame, so that its record is repeated).
     """
     frames = []
     leftover = []
@@ -352,8 +353,9 @@ def main():
                         help="chi(2) channel(s) to write (yyz=xxz and yzy=xzx "
                              "by C_inf_v symmetry; default xxz)")
     parser.add_argument("-skip", type=int, default=0, metavar="N",
-                        help="skip the first N records of the property files "
-                             "(1 for i-PI replay runs, which write step 0 twice)")
+                        help="skip the first N records of the property files (1 for "
+                             "an i-PI replay run whose initial configuration "
+                             "is also the first replayed frame)")
     parser.add_argument("-prefix", default="", metavar="STR",
                         help="prefix for the output file names")
     parser.add_argument("-numax", type=float, default=4000.0, metavar="CM1",

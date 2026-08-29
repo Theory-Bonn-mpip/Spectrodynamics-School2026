@@ -27,23 +27,33 @@ The two `.model` files are **not kept in git**: run `./download_models.sh`
 
 ## Chemical system and scope
 
-These models were trained on water systems, covering bulk water and the water/air interface at room temperature and a density of 1.00 g/cm³.
+Both models were trained on water at the revPBE-D3(0) level (see above), but on different reference data:
+
+| Model | Training data |
+|---|---|
+| `MACE_MLIP.model` | Bulk water and the water/air interface, at room temperature and a density of 1.00 g/cm³ |
+| `MACE-MDP.model` | Water clusters: dipoles and polarizabilities together with their position derivatives (Born effective charges and Raman tensors) |
 
 ## Accuracy / validation
 
+RMSE values on a held-out test set, with the training and validation sets
+given for reference.
+
 `MACE_MLIP.model`
 
-| Property | Test error |
-|---|---|
-| Energy (meV/atom) | *<!-- TODO -->* |
-| Forces (meV/Å) | *<!-- TODO -->* |
+| Property | Test | Validation | Train |
+|---|---|---|---|
+| Energy (meV/atom) | 0.2 | 0.1 | 0.1 |
+| Forces (meV/Å) | 11.6 | 11.2 | 11.1 |
+| Forces, relative (%) | 1.36 | 1.32 | 1.30 |
 
 `MACE-MDP.model`
 
-| Property | Test error |
-|---|---|
-| Dipole moment (*<!-- TODO: units, e.g. mD/atom or me·Å/atom -->*) | *<!-- TODO -->* |
-| Polarizability (*<!-- TODO: units, e.g. mÅ³/atom -->*) | *<!-- TODO -->* |
+| Property | Test | Validation | Train |
+|---|---|---|---|
+| Dipole moment (me·Å/atom) | 0.13 | 0.11 | 0.06 |
+| Dipole moment, relative (%) | 0.8 | 0.8 | 0.2 |
+| Polarizability (e·Å²/V/atom) | 0.61 | 0.57 | 0.27 |
 
 ## How to cite
 

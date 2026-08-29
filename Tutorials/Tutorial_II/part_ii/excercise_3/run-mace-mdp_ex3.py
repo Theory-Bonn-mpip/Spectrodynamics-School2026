@@ -1,3 +1,4 @@
+import os
 import sys
 from ase.io import read
 from mace.calculators import MACECalculator
@@ -21,8 +22,11 @@ model_calc = MACECalculator(model_name, device='cpu', model_type='DipolePolariza
 atoms.calc = model_calc
 
 # Create unix client: instead of energies and forces, it sends the total
-# dipole and polarizability of each frame to i-PI
-host = "mdp-ex3"  # must match <address> in input_mdp.xml
+# dipole and polarizability of each frame to i-PI. The address must match
+# <address> in input_mdp.xml; run_ex3.sh replaces both by a name unique to
+# this folder, so that students sharing a machine in the school do not end up
+# on the same socket.
+host = os.environ.get("IPI_ADDRESS", "mdp-ex3")
 print("Setting up socket.")
 client = MDP_SocketClient(unixsocket=host, has_dipole=True, has_polarizability=True,
                           dipole_units='eang')   # MACECalculator returns dipoles in e*Angstrom
