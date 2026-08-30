@@ -748,13 +748,12 @@ plt.show()
 #   near 3770 cm :math:`^{-1}`, negative hydrogen-bonded band -- and,
 #   once normalized, roughly on the width of the band: they describe the
 #   same dynamics, and the sign is geometry.
-# - The intra- and intermolecular cross terms (``-rc 4.0``) deepen the
-#   hydrogen-bonded band of the bond model only slightly (1.5 against 1.5
-#   times the free-OH peak) but red-shift its minimum by about 80
-#   cm :math:`^{-1}`, from 3490 to 3410.
-# - The machine-learned atomic quantities deepen it much further, to 1.9
-#   times the free-OH peak, and add the 3680-3700 cm :math:`^{-1}`
-#   shoulder of 6b: this is what the ML model contains on top of the
+# - The  intermolecular cross terms (``-rc 4.0``) widens  the
+#   hydrogen-bonded band of the bond model 
+#   and red-shift its minimum.  
+# - The machine-learned atomic quantities deepen the hydrogen-bonded band further,
+#   and add the 3680-3700 cm :math:`^{-1}`
+#   shoulder. This is what the ML model contains on top of the
 #   empirical maps (intermolecular polarization, charge transfer and the
 #   full environment dependence of the transition moments) -- the same
 #   lesson as in Exercise 3, now at the interface.
