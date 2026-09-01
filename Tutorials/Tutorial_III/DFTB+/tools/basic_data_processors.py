@@ -285,3 +285,58 @@ def plot_energy_and_dipole(filename=None, molecule_ids=None, quantity="energy",
 
     return
 
+def get_atom_coordinates_from_trajectory(filename, atom_index):
+    """
+    Extracts the coordinates of a specific atom from a trajectory file.
+
+    Parameters:
+    filename (str): Path to the trajectory file.
+    atom_index (int): Index of the atom (1-based).
+
+    Returns:
+    tuple: A tuple containing:
+        - np.ndarray: Array of shape (N,) containing the time values.
+        - np.ndarray: Array of shape (N, 3) containing the coordinates of the specified atom over time.
+    """
+    coordinates = []
+    time_values = []
+
+    with open(filename, "r") as infile:
+        for line in infile:
+            stripped = line.strip()
+
+            parts = stripped.split()
+
+            if len(parts) < 4:
+                try:
+                    n_atoms = int(stripped)
+                    n_counter = 0
+                except ValueError:
+                    n_atoms = None
+                continue
+
+            if stripped.startswith("# Time"):
+                # Header format: "# Time = <value> (a.u.)"
+                try:
+                    current_time = float(stripped.split("=")[1].split()[0])
+                    time_values.append(current_time)
+                except (IndexError, ValueError):
+                    current_time = None
+                continue
+
+            if not stripped or stripped.startswith("#"):
+                continue
+
+            try:
+                current_atom_index = n_counter + 1
+                n_counter += 1
+                x = float(parts[1])
+                y = float(parts[2])
+                z = float(parts[3])
+            except ValueError:
+                continue
+
+            if current_atom_index == atom_index:
+                coordinates.append([x, y, z])
+
+    return np.array(time_values), np.array(coordinates)
