@@ -84,7 +84,6 @@ RUN pip install --break-system-packages --no-cache \
     matplotlib \
     ffmpeg-python \
     jupytext \
-    postopus \
     nbstripout
 
 # ============================================================
@@ -97,6 +96,7 @@ RUN pip install \
     --no-cache-dir \
     "git+https://github.com/MPIP-STREAM/mace.git@MDP-derivatives-with-bec_training"
 
+RUN pip install "git+https://gitlab.com/octopus-code/postopus.git"
 
 RUN pip install --break-system-packages --no-cache nbstripout
 
