@@ -23,6 +23,19 @@ Individual steps
    ./download_models.sh                                     # MACE models (~47 MB)
    ./download_trajectories.sh                               # Part III trajectory data (~1 GB), re-run to resume
 
+``setup.sh`` also switches JupyterLab's notebook rendering to ``defer``
+(an ``overrides.json`` inside the environment): the default virtualized
+rendering can intermittently leave cells blank, especially on remote/cloud
+machines. To apply just that fix to an existing environment:
+
+.. code-block:: bash
+
+   conda run -n Tutorial_II python -c "import json,os,sys; d=os.path.join(sys.prefix,'share','jupyter','lab','settings'); os.makedirs(d,exist_ok=True); p=os.path.join(d,'overrides.json'); cfg=json.load(open(p)) if os.path.exists(p) else {}; cfg.setdefault('@jupyterlab/notebook-extension:tracker',{}).update(windowingMode='defer'); json.dump(cfg,open(p,'w'),indent=2); print(p)"
+
+(then reload the browser tab). The first code cell of each notebook applies
+the same setting at the user level, so simply running the notebooks once
+also fixes it.
+
 Run the tutorial
 ----------------
 

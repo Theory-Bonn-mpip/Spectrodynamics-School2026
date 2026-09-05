@@ -3,7 +3,7 @@
 #  What ./setup.sh does, spelled out in plain English.
 # ============================================================================
 #
-#  setup.sh does four things for you in one go. This file does exactly the
+#  setup.sh does five things for you in one go. This file does exactly the
 #  same, but with every command written out and explained, so you can read
 #  what is going to happen -- or copy the commands one by one into your own
 #  terminal instead of running this script.
@@ -24,7 +24,7 @@ cd "$(dirname "$0")"
 
 
 # ----------------------------------------------------------------------------
-# STEP 1 of 4 -- Install the software
+# STEP 1 of 5 -- Install the software
 # ----------------------------------------------------------------------------
 # Everything the tutorial needs (i-PI, MACE, ASE, jupyter, matplotlib, ...) is
 # listed in the file environment.yml. The command below reads that list and
@@ -38,7 +38,7 @@ cd "$(dirname "$0")"
 # If you have already created the environment before, conda would stop with
 # an error, so we simply skip the step in that case.
 
-echo "=== STEP 1 of 4: installing the software into the conda environment 'Tutorial_II' ==="
+echo "=== STEP 1 of 5: installing the software into the conda environment 'Tutorial_II' ==="
 
 if conda env list | grep -q '^Tutorial_II '; then
     echo "The environment 'Tutorial_II' already exists - skipping this step."
@@ -48,7 +48,37 @@ fi
 
 
 # ----------------------------------------------------------------------------
-# STEP 2 of 4 -- Turn the tutorial text into Jupyter notebooks
+# STEP 2 of 5 -- Make Jupyter always draw every notebook cell
+# ----------------------------------------------------------------------------
+# JupyterLab normally skips drawing the cells that are outside your screen,
+# to feel faster. On some computers (in particular when the notebook runs on
+# a remote/cloud machine) that trick misfires and cells show up blank until
+# you click around. The command below tells Jupyter to draw every cell
+# ("defer" mode), which makes the notebooks display reliably. It writes one
+# small settings file inside the Tutorial_II environment and touches nothing
+# else.
+
+echo
+echo "=== STEP 2 of 5: notebook display settings ==="
+
+# (a multi-line -c, not a heredoc: conda run does not forward stdin)
+conda run -n Tutorial_II python -c '
+import json, os, sys
+d = os.path.join(sys.prefix, "share", "jupyter", "lab", "settings")
+os.makedirs(d, exist_ok=True)
+p = os.path.join(d, "overrides.json")
+try:
+    cfg = json.load(open(p))
+except (FileNotFoundError, ValueError):
+    cfg = {}
+cfg.setdefault("@jupyterlab/notebook-extension:tracker", {})["windowingMode"] = "defer"
+json.dump(cfg, open(p, "w"), indent=2)
+print("wrote " + p)
+'
+
+
+# ----------------------------------------------------------------------------
+# STEP 3 of 5 -- Turn the tutorial text into Jupyter notebooks
 # ----------------------------------------------------------------------------
 # The tutorial is written as ordinary Python files (tutorial_II.py for Parts I
 # and II, 3_vsfg.py for the optional Part III). The small converter below
@@ -59,14 +89,14 @@ fi
 # rebuild it from the .py file.
 
 echo
-echo "=== STEP 2 of 4: creating the notebooks ==="
+echo "=== STEP 3 of 5: creating the notebooks ==="
 
 python3 scripts/convert_to_notebook.py tutorial_II.py tutorial_II.ipynb
 python3 scripts/convert_to_notebook.py 3_vsfg.py     3_vsfg.ipynb
 
 
 # ----------------------------------------------------------------------------
-# STEP 3 of 4 -- Download the two MACE models (about 47 MB)
+# STEP 4 of 5 -- Download the two MACE models (about 47 MB)
 # ----------------------------------------------------------------------------
 # The tutorial uses two machine-learned models, which are too big to keep in
 # the repository:
@@ -77,13 +107,13 @@ python3 scripts/convert_to_notebook.py 3_vsfg.py     3_vsfg.ipynb
 # folder. Files that are already there are left alone.
 
 echo
-echo "=== STEP 3 of 4: downloading the MACE models (~47 MB) ==="
+echo "=== STEP 4 of 5: downloading the MACE models (~47 MB) ==="
 
 ./download_models.sh
 
 
 # ----------------------------------------------------------------------------
-# STEP 4 of 4 -- Download the simulation data for Part III (about 1 GB)
+# STEP 5 of 5 -- Download the simulation data for Part III (about 1 GB)
 # ----------------------------------------------------------------------------
 # Part III analyses a 50 ps simulation of a water surface that was run for
 # you on a computer cluster (running it yourself would take days). The
@@ -98,7 +128,7 @@ echo "=== STEP 3 of 4: downloading the MACE models (~47 MB) ==="
 # space and only plan to do Parts I and II, you can skip this step.
 
 echo
-echo "=== STEP 4 of 4: downloading the Part III simulation data (~1 GB) ==="
+echo "=== STEP 5 of 5: downloading the Part III simulation data (~1 GB) ==="
 
 ./download_trajectories.sh
 

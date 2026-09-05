@@ -5,8 +5,9 @@
 #
 # does everything needed before the session:
 #   1. creates the conda environment "Tutorial_II" from environment.yml
-#   2. converts the tutorial script(s) to Jupyter notebooks
-#   3. downloads the MACE models (~47 MB) and the Part III data (~1 GB)
+#   2. makes JupyterLab render every notebook cell (windowing "defer")
+#   3. converts the tutorial script(s) to Jupyter notebooks
+#   4. downloads the MACE models (~47 MB) and the Part III data (~1 GB)
 #
 # Safe to re-run: an existing environment is kept, notebooks are simply
 # regenerated, and already-downloaded files are skipped.
@@ -16,7 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 ENV_NAME=Tutorial_II
 
-echo "=== 1/3  Conda environment '${ENV_NAME}' ==="
+echo "=== 1/4  Conda environment '${ENV_NAME}' ==="
 if ! command -v conda >/dev/null 2>&1; then
     echo "ERROR: conda not found. Install Miniconda/Anaconda first:"
     echo "       https://docs.conda.io/en/latest/miniconda.html"
@@ -39,11 +40,33 @@ else
 fi
 
 echo
-echo "=== 2/3  Generating the Jupyter notebooks ==="
+echo "=== 2/4  Notebook display settings ==="
+# JupyterLab 4's default virtualized rendering ("contentVisibility") can
+# intermittently leave cells blank, especially in remote/cloud browsers.
+# "defer" attaches every cell to the DOM (offscreen ones on idle CPU), so
+# all cells always render. Written as an env-level override; merges with
+# any existing overrides.json instead of overwriting it.
+# (a multi-line -c, not a heredoc: conda run does not forward stdin)
+conda run -n "${ENV_NAME}" python -c '
+import json, os, sys
+d = os.path.join(sys.prefix, "share", "jupyter", "lab", "settings")
+os.makedirs(d, exist_ok=True)
+p = os.path.join(d, "overrides.json")
+try:
+    cfg = json.load(open(p))
+except (FileNotFoundError, ValueError):
+    cfg = {}
+cfg.setdefault("@jupyterlab/notebook-extension:tracker", {})["windowingMode"] = "defer"
+json.dump(cfg, open(p, "w"), indent=2)
+print("wrote " + p)
+'
+
+echo
+echo "=== 3/4  Generating the Jupyter notebooks ==="
 bash generate_notebooks.sh
 
 echo
-echo "=== 3/3  Downloading the MACE models and the Part III data (~1 GB) ==="
+echo "=== 4/4  Downloading the MACE models and the Part III data (~1 GB) ==="
 bash download_all.sh
 
 echo

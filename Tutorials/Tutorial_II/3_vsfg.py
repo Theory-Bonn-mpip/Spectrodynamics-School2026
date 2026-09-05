@@ -51,6 +51,8 @@ end, and the answers to the questions in the section after it.
    ``NameError: name 'np' is not defined``, this cell was skipped -- go
    back and execute it.
 """
+import json
+import os
 import re
 import subprocess
 
@@ -58,6 +60,25 @@ import chemiscope
 from ase.io import read
 import matplotlib.pyplot as plt
 import numpy as np
+
+# JupyterLab 4 sometimes leaves cells blank with its default virtualized
+# rendering; this makes sure every cell is always drawn. Takes effect the
+# next time the page is (re)loaded.
+_settings = os.path.join(os.path.expanduser("~"), ".jupyter", "lab",
+                         "user-settings", "@jupyterlab", "notebook-extension")
+_tracker = os.path.join(_settings, "tracker.jupyterlab-settings")
+try:
+    with open(_tracker) as _f:
+        _cfg = json.load(_f)
+except (FileNotFoundError, ValueError):
+    _cfg = None if os.path.exists(_tracker) else {}
+if _cfg is not None and _cfg.get("windowingMode") != "defer":
+    _cfg["windowingMode"] = "defer"
+    os.makedirs(_settings, exist_ok=True)
+    with open(_tracker, "w") as _f:
+        json.dump(_cfg, _f, indent=2)
+    print("Notebook display settings updated -- if cells ever appear blank,"
+          " reload the browser tab once.")
 
 # %%
 # Vibrational sum-frequency generation (VSFG) spectroscopy is a second-order
