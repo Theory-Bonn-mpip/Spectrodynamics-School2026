@@ -54,7 +54,8 @@ fi
 # to feel faster. On some computers (in particular when the notebook runs on
 # a remote/cloud machine) that trick misfires and cells show up blank until
 # you click around. The command below tells Jupyter to draw every cell
-# ("defer" mode), which makes the notebooks display reliably. It writes one
+# ("none" mode, i.e. no cell-skipping at all), which makes the notebooks
+# display reliably. It writes one
 # small settings file inside the Tutorial_II environment and touches nothing
 # else.
 
@@ -71,7 +72,7 @@ try:
     cfg = json.load(open(p))
 except (FileNotFoundError, ValueError):
     cfg = {}
-cfg.setdefault("@jupyterlab/notebook-extension:tracker", {})["windowingMode"] = "defer"
+cfg.setdefault("@jupyterlab/notebook-extension:tracker", {})["windowingMode"] = "none"
 json.dump(cfg, open(p, "w"), indent=2)
 print("wrote " + p)
 '

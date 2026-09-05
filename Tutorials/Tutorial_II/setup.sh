@@ -5,7 +5,7 @@
 #
 # does everything needed before the session:
 #   1. creates the conda environment "Tutorial_II" from environment.yml
-#   2. makes JupyterLab render every notebook cell (windowing "defer")
+#   2. makes JupyterLab render every notebook cell (windowing "none")
 #   3. converts the tutorial script(s) to Jupyter notebooks
 #   4. downloads the MACE models (~47 MB) and the Part III data (~1 GB)
 #
@@ -43,8 +43,8 @@ echo
 echo "=== 2/4  Notebook display settings ==="
 # JupyterLab 4's default virtualized rendering ("contentVisibility") can
 # intermittently leave cells blank, especially in remote/cloud browsers.
-# "defer" attaches every cell to the DOM (offscreen ones on idle CPU), so
-# all cells always render. Written as an env-level override; merges with
+# "none" attaches every cell to the DOM at page load, with no reliance on
+# browser idle callbacks, so all cells always render. Written as an env-level override; merges with
 # any existing overrides.json instead of overwriting it.
 # (a multi-line -c, not a heredoc: conda run does not forward stdin)
 conda run -n "${ENV_NAME}" python -c '
@@ -56,7 +56,7 @@ try:
     cfg = json.load(open(p))
 except (FileNotFoundError, ValueError):
     cfg = {}
-cfg.setdefault("@jupyterlab/notebook-extension:tracker", {})["windowingMode"] = "defer"
+cfg.setdefault("@jupyterlab/notebook-extension:tracker", {})["windowingMode"] = "none"
 json.dump(cfg, open(p, "w"), indent=2)
 print("wrote " + p)
 '

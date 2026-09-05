@@ -4,7 +4,7 @@ Part III: Vibrational sum-frequency generation spectroscopy of the water/air int
 **************************************************************************************
 
 :Authors: Yair Litman `@litman90 <https://github.com/litman90/>`_
-:Version: 1.0
+:Version: 1.1
 
 **This notebook is the optional third part of the tutorial** *Vibrational
 spectroscopy of water from machine-learned molecular dynamics*
@@ -72,8 +72,8 @@ try:
         _cfg = json.load(_f)
 except (FileNotFoundError, ValueError):
     _cfg = None if os.path.exists(_tracker) else {}
-if _cfg is not None and _cfg.get("windowingMode") != "defer":
-    _cfg["windowingMode"] = "defer"
+if _cfg is not None and _cfg.get("windowingMode") != "none":
+    _cfg["windowingMode"] = "none"
     os.makedirs(_settings, exist_ok=True)
     with open(_tracker, "w") as _f:
         json.dump(_cfg, _f, indent=2)
@@ -273,7 +273,8 @@ plt.show()
 #   negative of the profile at the top. This is exactly the asymmetry
 #   that SFG measures -- and the reason why the two surfaces of a slab
 #   must be treated with care (next section).
-#
+
+# %%
 # 5c) SFG from velocity-velocity correlation functions
 # ----------------------------------------------------
 #
@@ -345,7 +346,8 @@ plt.show()
 # (the two bonds of the same molecule) and the third the *intermolecular*
 # terms (bonds of different molecules). The ``-rc`` cutoff of the analysis
 # script selects how many of the cross terms are kept (5d).
-#
+
+# %%
 # The surface window
 # ~~~~~~~~~~~~~~~~~~
 #
@@ -395,7 +397,8 @@ plt.show()
 # dipole and polarizability signs is physical, both scripts of this part
 # use an overall sign convention that makes the free-OH peak positive, as
 # in experiment.
-#
+
+# %%
 # 5d) Computing the spectrum
 # --------------------------
 #

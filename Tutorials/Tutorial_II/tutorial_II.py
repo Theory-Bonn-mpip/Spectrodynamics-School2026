@@ -4,7 +4,7 @@ Vibrational spectroscopy of water from machine-learned molecular dynamics
 *************************************************************************
 
 :Authors: Yair Litman `@litman90 <https://github.com/litman90/>`_
-:Version: 1.0
+:Version: 1.1
 
 This tutorial was prepared for the *Spectrodynamics 2026* summer school. It
 shows how to compute vibrational spectra (IR, Raman, and sum-frequency
@@ -85,8 +85,8 @@ try:
         _cfg = json.load(_f)
 except (FileNotFoundError, ValueError):
     _cfg = None if os.path.exists(_tracker) else {}
-if _cfg is not None and _cfg.get("windowingMode") != "defer":
-    _cfg["windowingMode"] = "defer"
+if _cfg is not None and _cfg.get("windowingMode") != "none":
+    _cfg["windowingMode"] = "none"
     os.makedirs(_settings, exist_ok=True)
     with open(_tracker, "w") as _f:
         json.dump(_cfg, _f, indent=2)
@@ -1611,7 +1611,8 @@ plot_raman(curves, "normalized intensity")
 # thermostat samples; in the microcanonical (NVE) ensemble the kinetic
 # energy fluctuations are smaller, because :math:`K` and :math:`V` are
 # anticorrelated by energy conservation.
-#
+
+# %%
 # A.2 How time correlation functions are computed in practice
 # -----------------------------------------------------------
 #
@@ -1685,7 +1686,8 @@ plot_raman(curves, "normalized intensity")
 # commands of Part II use ``-corr fft`` throughout. The final cosine
 # transform to the frequency domain is always done with an FFT.
 #
-#
+
+# %%
 # A.3 Equivalence of the dipole and dipole-derivative forms of the IR spectrum
 # ----------------------------------------------------------------------------
 #
@@ -1880,7 +1882,8 @@ plot_raman(curves, "normalized intensity")
 #    and starts from the same value; change the seed and the starting
 #    temperature will move. The thermostat then brings the average to the
 #    target within a few relaxation times.
-#
+
+# %%
 # Exercise 2
 # ----------
 #
@@ -1900,7 +1903,8 @@ plot_raman(curves, "normalized intensity")
 #    intensity will increase; the bend is weaker, and the relative intensity
 #    *within* the stretching band shifts towards its low-frequency,
 #    strongly hydrogen-bonded side (non-Condon effects).
-#
+
+# %%
 # Exercise 3
 # ----------
 #
