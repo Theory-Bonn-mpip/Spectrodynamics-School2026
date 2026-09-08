@@ -157,7 +157,7 @@ def medium_file(file_number=1, medium_type="dielectric", relative_permitivity=1.
         print(
             "file_number          -> Number of the medium file, starting from 1. It should be consistent with \n"
             "                        the number of media specified in the 'inp' file.\n"
-            "medium_type          -> Type of medium: \"dielectric\", \"drude\", \"lorentz-drude\". Default: \"dielectric\".\n"
+            "medium_type          -> Type of medium: \"dielectric\", \"drude\", \"drude-lorentz\". Default: \"dielectric\".\n"
             "relative_permitivity -> Relative permitivity for a dielectric medium and drude. Default: 2.0.\n"
             "omega                -> Resonance frequency in eV for a drude medium.\n"
             "gamma                -> Damping factor in eV for a drude medium.\n"
@@ -201,8 +201,8 @@ def medium_file(file_number=1, medium_type="dielectric", relative_permitivity=1.
 
     medium_file = open("medium_" + id_number + ".in", "w")
 
-    if medium_type not in ["dielectric", "drude", "lorentz-drude"]:
-        print("Error: medium_type should be one of the following: \"dielectric\", \"drude\", \"lorentz-drude\".")
+    if medium_type not in ["dielectric", "drude", "drude-lorentz"]:
+        print("Error: medium_type should be one of the following: \"dielectric\", \"drude\", \"drude-lorentz\".")
         return
 
     if medium_type == "dielectric":
@@ -216,12 +216,12 @@ def medium_file(file_number=1, medium_type="dielectric", relative_permitivity=1.
         medium_file.write("\"" + medium_type + "\"\n")
         medium_file.write(str(omega) + " " + str(gamma) + "  " + str(relative_permitivity) + "\n")
 
-    if medium_type == "lorentz-drude":
+    if medium_type == "drude-lorentz":
         if material is None:
-            print("Error: material must be specified for a lorentz-drude medium.")
+            print("Error: material must be specified for a drude-lorentz medium.")
             return
         medium_file.write("\"" + medium_type + "\"\n")
-        medium_file.write("\"" + material + "\"\n")
+        medium_file.write("\"" + material + "\"     "+ str(relative_permitivity) +"\n")
 
     if dimensions == 1:
         for i in range(n):
