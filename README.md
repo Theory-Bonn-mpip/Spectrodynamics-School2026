@@ -1,60 +1,51 @@
-# SpectroDynamics 2026  
+# SpectroDynamics 2026
 ## Connecting Computational Spectroscopic Methods Across the Electromagnetic Spectrum
 
 📍 **Location:** CECAM, Lausanne  
-📅 **Dates:** 7 - 11 September 2026  
+📅 **Dates:** 7 - 11 September 2026
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Theory-Bonn-mpip/Spectrodynamics-School2026/HEAD)
 
 ---
 
-## Announcement
+## About the School
 
-We are delighted to announce that **SpectroDynamics 2026: Connecting Computational Spectroscopic Methods Across the Electromagnetic Spectrum** will take place at **CECAM, Lausanne**, from **7 – 11 September 2026**.
+**SpectroDynamics 2026: Connecting Computational Spectroscopic Methods Across the Electromagnetic Spectrum** took place at **CECAM, Lausanne**, from **7 – 11 September 2026**.
 
-The school is supported by funding from **CECAM**, **Psi-k**, and **J. Chem. Phys.** which allows us to host an intensive, in-person training event focused on computational spectroscopy across frequency regimes and methodological frameworks.
+The school was supported by funding from **CECAM**, **Psi-k**, and **J. Chem. Phys.**, which allowed us to host an intensive, in-person training event focused on computational spectroscopy across frequency regimes and methodological frameworks.
 
-Further details about the program, lecturers, and timetable can be found on the [**CECAM website**](https://www.cecam.org/workshop-details/spectrodynamics-2026-connecting-computational-spectroscopic-methods-across-the-electromagnetic-spectrum-1489).
+The full program, list of lecturers, and timetable are available on the [**CECAM website**](https://www.cecam.org/workshop-details/spectrodynamics-2026-connecting-computational-spectroscopic-methods-across-the-electromagnetic-spectrum-1489).
 
----
-
-## Applications and Selection Criteria
-
-Participation in the school is **application-based**, and selection will be made to ensure a strong match between the program and the participants’ backgrounds and interests.
-
-Please submit your application exclusively through the [**CECAM website**](https://www.cecam.org/workshop-details/spectrodynamics-2026-connecting-computational-spectroscopic-methods-across-the-electromagnetic-spectrum-1489), via the “Participate” tab associated with this school.
-
-**The school will also feature a poster session where all participants are encouraged to present their work as well as contributed talks.** 
-
-A **strong application** should clearly demonstrate (in not more than 400 words):
-
-- your current research interests and how they relate to quantum dynamics and/or computational spectroscopy;
-- your motivation for attending the school, including which aspects of the program (lectures, tutorials, methods) are most relevant to your work;
-- your background and level of experience (e.g. quantum dynamics, molecular dynamics, electronic structure methods, spectroscopy);
-- **how you plan to use the techniques learned at the school in your ongoing or future research projects.**
-
-Applicants are strongly encouraged to be **specific and concrete**, rather than generic. Applications that clearly articulate how the school will contribute to the applicant’s scientific development will be ranked most highly.
-
-
-
+This repository now serves as a permanent home for the **hands-on tutorial materials** used during the school, so that participants and anyone interested can revisit and reuse them.
 
 ---
 
-## Fellowships and Financial Support
+## Practical Sessions (Tutorials)
 
-Thanks to CECAM and Psi-k support, a **limited number of fellowships** will be available to help cover participation costs for selected applicants
-who may face financial or structural barriers to attending.
+The school included **three practical sessions**, each complementing a block of lectures. All materials are available as Jupyter notebooks in the [`Tutorials`](Tutorials) folder and can be run online via [Binder](https://mybinder.org/v2/gh/Theory-Bonn-mpip/Spectrodynamics-School2026/HEAD) or locally.
 
-When applying, please explicitly indicate in the “Your message” field whether you are requesting financial support, and specify **which type of support you need**:
+1. **Tutorial I – Grid-based wavepacket dynamics: NaF photodissociation on two coupled diabatic states**  
+   📂 [`Tutorials/Tutorial_I`](Tutorials/Tutorial_I)
 
-- accommodation,
-- travel, or
-- **both accommodation and travel**.
+2. **Tutorial II – Vibrational spectroscopy of water from machine-learned molecular dynamics**  
+   📂 [`Tutorials/Tutorial_II`](Tutorials/Tutorial_II)
 
-Applicants who require support but do not clearly state this in their application will not be considered for fellowships.
+3. **Tutorial III** (two parts)
+   - **Part 1: Polaritonic spectra of molecular ensembles by Maxwell-Time Dependent Density Functional Tight Binding**  
+     📂 [`Tutorials/Tutorial_III/DFTB+`](Tutorials/Tutorial_III/DFTB%2B)
+   - **Part 2: Beyond-electric-dipole dynamics by full minimal coupling Time Dependent Density Functional Theory**  
+     📂 [`Tutorials/Tutorial_III/Octopus`](Tutorials/Tutorial_III/Octopus)
 
 ---
 
-## Contact and Updates
+## Poster Session and Contributed Talks
 
-Updates, application links, and practical information will be posted in this repository and on the CECAM website.
+Besides the invited lectures and practical sessions, the program featured a **poster session**, where participants presented their own research, as well as a series of **contributed talks** selected from participant submissions.
 
-We look forward to welcoming you to Lausanne for an intensive and interactive week of learning and scientific exchange.
+The abstracts of all posters and contributed talks can be found in the [**"Abstracts (poster & talk)" section of the CECAM event page**](https://www.cecam.org/workshop-details/spectrodynamics-2026-connecting-computational-spectroscopic-methods-across-the-electromagnetic-spectrum-1489#abstract_tab).
+
+---
+
+## Acknowledgements
+
+We thank **CECAM**, **Psi-k**, and **J. Chem. Phys.** for their financial support, including the fellowships that helped participants attend the school, as well as all lecturers, tutors, and participants for an intensive and interactive week of learning and scientific exchange in Lausanne.
